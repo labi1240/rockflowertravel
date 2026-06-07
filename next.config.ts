@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
       { pathname: '/main_logo.png' },
       { pathname: '/white_logo.png' },
     ],
+    // UploadThing-hosted CMS media (v7 serves from <appId>.ufs.sh; utfs.io legacy).
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.ufs.sh', pathname: '/f/**' },
+      { protocol: 'https', hostname: 'utfs.io', pathname: '/f/**' },
+    ],
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {

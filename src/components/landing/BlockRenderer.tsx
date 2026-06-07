@@ -24,9 +24,13 @@ type Block = NonNullable<Route['layout']>[number]
 export default function BlockRenderer({
   blocks,
   fareId,
+  ratingValue,
+  ratingCount,
 }: {
   blocks?: Block[] | null
   fareId: BookingRouteId | null
+  ratingValue?: number | null
+  ratingCount?: number | null
 }) {
   if (!blocks?.length) return null
   return (
@@ -49,7 +53,7 @@ export default function BlockRenderer({
           case 'thingsToDo':
             return <ThingsToDoSection key={key} block={block} />
           case 'testimonials':
-            return <TestimonialsSection key={key} block={block} />
+            return <TestimonialsSection key={key} block={block} ratingValue={ratingValue} ratingCount={ratingCount} />
           case 'faq':
             return <FaqSection key={key} block={block} />
           case 'richText':

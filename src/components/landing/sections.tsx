@@ -221,13 +221,32 @@ export function ThingsToDoSection({ block }: { block: ThingsToDoBlock }) {
   )
 }
 
-export function TestimonialsSection({ block }: { block: TestimonialsBlock }) {
+export function TestimonialsSection({
+  block,
+  ratingValue,
+  ratingCount,
+}: {
+  block: TestimonialsBlock
+  ratingValue?: number | null
+  ratingCount?: number | null
+}) {
   const reviews = block.reviews ?? []
   if (!reviews.length) return null
+  // Prefer the route's headline rating; otherwise average the review stars.
+  const avg =
+    ratingValue ?? reviews.reduce((sum, r) => sum + (r.rating ?? 5), 0) / reviews.length
+  const count = ratingCount ?? reviews.length
   return (
     <section className="py-14">
       <Container>
         <SectionHeading heading={block.heading} />
+        <div className="mb-8 flex flex-col items-center gap-3 rounded-2xl bg-white p-6 text-center shadow-[var(--shadow-card)] ring-1 ring-mist-200/60 sm:flex-row sm:justify-center sm:gap-6 sm:text-left">
+          <div className="font-display text-5xl font-extrabold text-evergreen-800">{avg.toFixed(1)}</div>
+          <div>
+            <Stars value={avg} className="text-sunrise-500" />
+            <p className="mt-1 text-sm text-mist-500">Based on {count.toLocaleString()} reviews</p>
+          </div>
+        </div>
         <div className="grid gap-6 md:grid-cols-3">
           {reviews.map((r) => (
             <figure key={r.id ?? r.name} className="flex flex-col rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">

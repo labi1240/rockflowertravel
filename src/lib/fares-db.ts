@@ -102,6 +102,47 @@ export async function getLandingSlugs(): Promise<string[]> {
   return docs.map((r) => r.seoSlug).filter((s): s is string => Boolean(s))
 }
 
+export type LandingCard = {
+  seoSlug: string
+  displayName: string
+  tier: string
+  isPremium: boolean
+  imageUrl: string | null
+  minPriceCents: number | null
+}
+
+/**
+ * Compact cards for every published landing page (for "You might also like").
+ * Includes each route's hero image and cheapest active fare. Pass `excludeSlug`
+ * to drop the current route.
+ */
+export async function getLandingCards(excludeSlug?: string): Promise<LandingCard[]> {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'routes',
+    where: { _status: { equals: 'published' }, seoSlug: { exists: true } },
+    depth: 1, // populate heroImage
+    limit: 50,
+    overrideAccess: true,
+  })
+  const cards = await Promise.all(
+    docs
+      .filter((r) => r.seoSlug && r.slug !== excludeSlug)
+      .map(async (r): Promise<LandingCard> => {
+        const fares = await getFaresByRouteSlug(r.slug)
+        return {
+          seoSlug: r.seoSlug as string,
+          displayName: r.displayName,
+          tier: r.tier,
+          isPremium: Boolean(r.isPremium),
+          imageUrl: mediaUrl(r.heroImage),
+          minPriceCents: fares[0]?.priceCents ?? null,
+        }
+      }),
+  )
+  return cards
+}
+
 /** A single fare by its stable slug (active or not) — checkout decides sellability. */
 export async function getFareBySlug(slug: string): Promise<FareDTO | null> {
   const payload = await getPayloadClient()

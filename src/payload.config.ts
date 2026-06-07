@@ -1,5 +1,6 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { uploadthingStorage } from '@payloadcms/storage-uploadthing'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
@@ -65,5 +66,12 @@ export default buildConfig({
     },
   }),
   sharp,
-  plugins: [],
+  plugins: [
+    // Persist Media uploads on UploadThing (Vercel's filesystem is ephemeral —
+    // local-disk uploads 404 in production). Token from env UPLOADTHING_TOKEN.
+    uploadthingStorage({
+      collections: { media: true },
+      options: { token: process.env.UPLOADTHING_TOKEN, acl: 'public-read' },
+    }),
+  ],
 })

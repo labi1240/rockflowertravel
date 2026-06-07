@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -88,6 +88,12 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ sl
   const data = await loadRouteData(slug)
   if (!data) notFound()
   const { fare, route, templates } = data
+
+  // The rich, admin-authored landing page at /{seoSlug} is now the canonical
+  // dedicated page — send legacy fare URLs there (301) when one is published.
+  if (route?.seoSlug && route._status === 'published') {
+    permanentRedirect(`/${route.seoSlug}`)
+  }
 
   const q = quote(fare, 1, Date.now())
   const bookableLegs = templates.flatMap((t) =>

@@ -2,6 +2,40 @@
 
 _Last updated: 2026-06-07_
 
+## ✅ Shipped (update 2): Route-page redesign + image hosting + URL consolidation
+
+Brought the dedicated route pages up to morainelakebus/Viator quality and fixed
+the production-image breakage.
+
+- **UploadThing media hosting** — Payload `Media` now persists to UploadThing
+  (`@payloadcms/storage-uploadthing`), fixing broken images on Vercel (the
+  serverless filesystem is ephemeral). `next.config` allows `*.ufs.sh` / `utfs.io`.
+  Migration `add_uploadthing_media_fields` adds the `_key`/`prefix` columns.
+- **One canonical page** — legacy `/routes/[fareSlug]` now **308-redirects** to the
+  route's rich landing page (`/{seoSlug}`) when one is published.
+- **Gallery hero** — Viator-style 1-large + 4-tile header (auto-built from the
+  route hero image + Gallery-block photos), with a gradient fallback so a missing
+  image never shows a broken icon. Hero no longer clips under the fixed navbar.
+- **Sticky booking** — sticky price/fare card in the intro row + a slide-up
+  bottom "Book now" bar on scroll.
+- **Reviews summary** — aggregate rating header (e.g. 4.9 / 5, "Based on N reviews")
+  above the testimonial cards.
+- **You might also like** — related published-landing cards (image + from-price).
+- **Breadcrumbs** — visible nav + `BreadcrumbList` JSON-LD.
+
+### ⚠️ Action items before/after deploy
+1. **Vercel env:** add `UPLOADTHING_TOKEN` (and `UPLOADTHING_SECRET_KEY`) to the
+   Vercel project so production uploads work.
+2. **Re-upload images:** existing Media rows point at old local-disk URLs and will
+   404 until re-uploaded through the admin (UploadThing handles new uploads only).
+   The seeded `sunrise-express` route has no images yet — add a hero + gallery photos
+   in admin to light up the gallery hero.
+3. **Restart local dev** (`pnpm dev`) — `next.config`/`payload.config` changes need a
+   restart; the running server shows stale output until then.
+4. Redirect uses Next `permanentRedirect` → **HTTP 308** (permanent; SEO-equivalent
+   to 301 for GET).
+
+
 ## ✅ Shipped: Admin-customizable SEO landing pages
 
 Rich, marketing-style landing pages (à la morainelakebus.com / Viator tour pages),

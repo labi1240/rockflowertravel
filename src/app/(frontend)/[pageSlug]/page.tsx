@@ -1,18 +1,20 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import BookingModal from '@/components/BookingModal'
-import ServiceBookButton from '@/components/ServiceBookButton'
 import JsonLd from '@/components/JsonLd'
 import BlockRenderer from '@/components/landing/BlockRenderer'
+import HeroGallery from '@/components/landing/HeroGallery'
+import BookingCard from '@/components/landing/BookingCard'
+import StickyBookBar from '@/components/landing/StickyBookBar'
+import RelatedRoutes from '@/components/landing/RelatedRoutes'
 import { Stars } from '@/components/landing/icons'
-import { resolveMedia } from '@/components/landing/media'
+import { resolveMedia, type ResolvedImage } from '@/components/landing/media'
 import { getPayloadClient } from '@/lib/payload'
-import { getFaresByRouteSlug } from '@/lib/fares-db'
-import { quote, formatCents, type FareDTO } from '@/lib/fares'
+import { getFaresByRouteSlug, getLandingCards, type LandingCard } from '@/lib/fares-db'
+import { formatCents, type FareDTO } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
 import type { Route } from '@/payload-types'
 
@@ -24,7 +26,9 @@ export const dynamic = 'force-dynamic'
 // segment, but guard anyway so stray paths fall through to 404 fast.
 const RESERVED = new Set(['routes', 'staff', 'my-trips', 'sign-in', 'sign-up', 'privacy-policy', 'admin', 'api'])
 
-async function loadLanding(seoSlug: string): Promise<{ route: Route; fares: FareDTO[] } | null> {
+async function loadLanding(
+  seoSlug: string,
+): Promise<{ route: Route; fares: FareDTO[]; related: LandingCard[] } | null> {
   if (RESERVED.has(seoSlug)) return null
   const payload = await getPayloadClient()
   const { docs } = await payload.find({
@@ -36,8 +40,30 @@ async function loadLanding(seoSlug: string): Promise<{ route: Route; fares: Fare
   })
   const route = docs[0]
   if (!route) return null
-  const fares = await getFaresByRouteSlug(route.slug)
-  return { route, fares }
+  const [fares, related] = await Promise.all([
+    getFaresByRouteSlug(route.slug),
+    getLandingCards(route.slug),
+  ])
+  return { route, fares, related }
+}
+
+/** Hero images: route hero photo + any Gallery-block photos, deduped, max 5. */
+function collectHeroImages(route: Route): ResolvedImage[] {
+  const out: ResolvedImage[] = []
+  const seen = new Set<string>()
+  const push = (img: ResolvedImage | null) => {
+    if (img && !seen.has(img.url)) {
+      seen.add(img.url)
+      out.push(img)
+    }
+  }
+  push(resolveMedia(route.heroImage))
+  for (const block of route.layout ?? []) {
+    if (block.blockType === 'gallery') {
+      for (const row of block.images ?? []) push(resolveMedia(row.image))
+    }
+  }
+  return out.slice(0, 5)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ pageSlug: string }> }): Promise<Metadata> {
@@ -98,7 +124,16 @@ function buildSchema(route: Route, pageSlug: string, fares: FareDTO[]) {
       : {}),
   }
 
-  const schemas: Record<string, unknown>[] = [product]
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/') },
+      { '@type': 'ListItem', position: 2, name: route.displayName, item: url },
+    ],
+  }
+
+  const schemas: Record<string, unknown>[] = [product, breadcrumb]
 
   const faqBlock = (route.layout ?? []).find((b) => b.blockType === 'faq')
   if (faqBlock && 'items' in faqBlock && faqBlock.items?.length) {
@@ -119,9 +154,10 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
   const { pageSlug } = await params
   const data = await loadLanding(pageSlug)
   if (!data) notFound()
-  const { route, fares } = data
+  const { route, fares, related } = data
 
-  const hero = route.heroImage ? resolveMedia(route.heroImage) : null
+  const nowMs = Date.now()
+  const heroImages = collectHeroImages(route)
   const defaultFare = fares[0] ?? null
   const minPrice = defaultFare?.priceCents
   const badge = route.hero?.badge || (route.isPremium ? 'Premium service' : 'Daily shuttle')
@@ -129,88 +165,88 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
   const subheadline = route.hero?.subheadline || route.description || ''
   const rating = route.hero?.ratingValue ?? null
 
+  const quickFacts = defaultFare
+    ? [
+        `Departs ${defaultFare.defaultTime}`,
+        `${defaultFare.origin} → ${defaultFare.destination}`,
+        defaultFare.roundTrip ? 'Round trip' : 'One way',
+        'Free cancellation 24h',
+      ]
+    : []
+
   return (
     <>
       <JsonLd schema={buildSchema(route, pageSlug, fares)} />
       <Navbar />
 
       <main className="main-content bg-mist-50">
-        {/* Hero */}
-        <section className="relative">
-          <div className="relative h-[48vh] min-h-[360px] w-full bg-gradient-to-br from-evergreen-800 to-evergreen-950">
-            {hero && <Image src={hero.url} alt={hero.alt || headline} fill priority sizes="100vw" className="object-cover opacity-80" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-evergreen-950/85 via-evergreen-950/40 to-transparent" />
-          </div>
-          <div className="mx-auto -mt-44 max-w-5xl px-4 sm:px-6">
-            <div className="rounded-3xl bg-white p-6 shadow-[var(--shadow-elevated)] ring-1 ring-mist-200 sm:p-8">
-              <nav className="mb-3 text-xs text-mist-500">
-                <Link href="/" className="hover:text-evergreen-700">Home</Link> <span className="mx-1">/</span>
-                <span className="text-mist-700">{route.displayName}</span>
-              </nav>
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-                <div className="max-w-2xl">
-                  <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-sunrise-500/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-sunrise-700">
-                    {badge}
-                  </p>
-                  <h1 className="font-display text-3xl font-bold text-evergreen-800 sm:text-4xl">{headline}</h1>
-                  {subheadline && <p className="mt-3 text-lg text-mist-700">{subheadline}</p>}
-                  {rating != null && (
-                    <div className="mt-4 flex items-center gap-2 text-sm">
-                      <Stars value={rating} className="text-sunrise-500" />
-                      <span className="font-bold text-mist-900">{rating.toFixed(1)}</span>
-                      {route.hero?.ratingCount != null && <span className="text-mist-500">({route.hero.ratingCount} reviews)</span>}
-                      {route.hero?.ratingSource && <span className="text-mist-400">· {route.hero.ratingSource}</span>}
-                    </div>
-                  )}
-                </div>
-                {defaultFare && (
-                  <div className="shrink-0 text-right">
-                    {minPrice != null && (
-                      <>
-                        <div className="text-xs uppercase tracking-wider text-mist-500">From</div>
-                        <div className="font-display text-3xl font-bold text-evergreen-800">{formatCents(minPrice)}</div>
-                        <div className="text-xs uppercase tracking-wider text-mist-500">per seat + 5% GST</div>
-                      </>
-                    )}
-                    <div className="mt-3"><ServiceBookButton route={defaultFare.id} variant="gold">Book now</ServiceBookButton></div>
-                  </div>
-                )}
-              </div>
+        {/* Hero: title block + gallery, clear of the fixed navbar */}
+        <section className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 sm:pt-28">
+          <nav className="mb-3 text-xs text-mist-500">
+            <Link href="/" className="hover:text-evergreen-700">Home</Link> <span className="mx-1">/</span>
+            <Link href="/#routes" className="hover:text-evergreen-700">Shuttles</Link> <span className="mx-1">/</span>
+            <span className="text-mist-700">{route.displayName}</span>
+          </nav>
+          <div className="flex flex-col gap-3 pb-5">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-sunrise-500/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-sunrise-700">
+              {badge}
+            </span>
+            <h1 className="font-display text-3xl font-bold leading-tight text-evergreen-800 sm:text-4xl lg:text-5xl">{headline}</h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              {rating != null && (
+                <span className="flex items-center gap-1.5">
+                  <Stars value={rating} className="text-sunrise-500" />
+                  <span className="font-bold text-mist-900">{rating.toFixed(1)}</span>
+                  {route.hero?.ratingCount != null && <span className="text-mist-500">({route.hero.ratingCount.toLocaleString()} reviews)</span>}
+                </span>
+              )}
+              {defaultFare && (
+                <span className="text-mist-500">{defaultFare.origin} → {defaultFare.destination}</span>
+              )}
             </div>
+          </div>
+          <HeroGallery images={heroImages} alt={headline} />
+        </section>
+
+        {/* Intro overview + sticky booking */}
+        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <h2 className="font-display text-2xl font-bold text-evergreen-800">Overview</h2>
+              {subheadline && <p className="mt-3 text-mist-700">{subheadline}</p>}
+              {quickFacts.length > 0 && (
+                <ul className="mt-6 flex flex-wrap gap-2">
+                  {quickFacts.map((f) => (
+                    <li key={f} className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-mist-700 ring-1 ring-mist-200">
+                      <span className="text-evergreen-600">✓</span> {f}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <aside className="lg:col-span-1">
+              <div className="lg:sticky lg:top-24">
+                <BookingCard fares={fares} nowMs={nowMs} />
+              </div>
+            </aside>
           </div>
         </section>
 
-        {/* Fare options — bookable price variants for this experience */}
-        {fares.length > 0 && (
-          <section className="mx-auto max-w-5xl px-4 pt-12 sm:px-6">
-            <h2 className="font-display text-2xl font-extrabold tracking-tight text-evergreen-800 sm:text-3xl">Choose your trip</h2>
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {fares.map((f) => {
-                const q = quote(f, 1, Date.now())
-                return (
-                  <div key={f.id} className="flex flex-col rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">
-                    <h3 className="font-display text-base font-bold text-evergreen-800">{f.label}</h3>
-                    <p className="mt-1 text-sm text-mist-500">{f.origin} → {f.destination}</p>
-                    <div className="mt-4 flex items-baseline gap-1">
-                      <span className="font-display text-2xl font-bold text-mist-900">{formatCents(f.priceCents)}</span>
-                      <span className="text-xs text-mist-500">/ seat</span>
-                    </div>
-                    <dl className="mt-2 space-y-1 text-xs text-mist-500">
-                      <div className="flex justify-between"><dt>Departs</dt><dd className="tabular-nums text-mist-700">{f.defaultTime}</dd></div>
-                      {f.tollCents > 0 && <div className="flex justify-between"><dt>Moraine toll</dt><dd className="tabular-nums text-mist-700">{formatCents(f.tollCents)}</dd></div>}
-                      <div className="flex justify-between"><dt>Total / seat (incl. GST)</dt><dd className="tabular-nums font-semibold text-mist-900">{formatCents(q.totalCents)}</dd></div>
-                    </dl>
-                    <div className="mt-5"><ServiceBookButton route={f.id} variant="gold">Book this trip</ServiceBookButton></div>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )}
-
         {/* Admin-authored content blocks */}
-        <BlockRenderer blocks={route.layout} fareId={defaultFare?.id ?? null} />
+        <BlockRenderer
+          blocks={route.layout}
+          fareId={defaultFare?.id ?? null}
+          ratingValue={route.hero?.ratingValue}
+          ratingCount={route.hero?.ratingCount}
+        />
+
+        {/* You might also like */}
+        <RelatedRoutes cards={related} />
       </main>
+
+      {defaultFare && minPrice != null && (
+        <StickyBookBar fareId={defaultFare.id} priceLabel={formatCents(minPrice)} title={headline} />
+      )}
 
       <Footer />
       <BookingModal />
