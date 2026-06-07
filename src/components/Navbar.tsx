@@ -66,6 +66,7 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden items-center rounded-full border border-mist-200 bg-mist-100 px-2 py-1.5 shadow-inner md:flex md:gap-1">
+          <NavLink href="/#routes">All Routes</NavLink>
           <NavLink href="/#schedule">Schedules</NavLink>
           <NavLink href="/#tracker">Live Tracker</NavLink>
           <NavLink href="/#map">Route Map</NavLink>
@@ -124,6 +125,7 @@ export default function Navbar() {
             className="fixed inset-0 z-40 bg-evergreen-950/20 backdrop-blur-sm"
           />
           <nav className="absolute inset-x-0 top-full z-50 mx-3 mt-2 flex flex-col gap-1 rounded-2xl border border-mist-200 bg-mist-50/95 p-3 shadow-[var(--shadow-card)] backdrop-blur-2xl">
+            <MobileLink href="/#routes" onClick={() => setMenuOpen(false)}>All Routes</MobileLink>
             <MobileLink href="/#schedule" onClick={() => setMenuOpen(false)}>Schedules</MobileLink>
             <MobileLink href="/#tracker" onClick={() => setMenuOpen(false)}>Live Tracker</MobileLink>
             <MobileLink href="/#map" onClick={() => setMenuOpen(false)}>Route Map</MobileLink>

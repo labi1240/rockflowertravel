@@ -37,6 +37,7 @@ export interface FareDTO {
   defaultTime: string
   note: string | null
   active: boolean
+  imageUrl: string | null // fare image → route hero image fallback
   salePriceCents: number | null
   saleStartsMs: number | null // epoch ms, inclusive lower bound
   saleEndsMs: number | null // epoch ms, inclusive upper bound

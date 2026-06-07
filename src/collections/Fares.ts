@@ -48,6 +48,12 @@ export const Fares: CollectionConfig = {
         description: 'Legacy inventory-bucket tag (RouteKind value as string). Optional for new fares.',
       },
     },
+    {
+      name: 'image',
+      type: 'upload',
+      relationTo: 'media',
+      admin: { description: 'Card/marketing photo for this fare. Falls back to the route image, then a gradient.' },
+    },
     { name: 'label', type: 'text', required: true },
     { name: 'short', type: 'text', required: true },
     {

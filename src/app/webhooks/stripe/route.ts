@@ -3,6 +3,7 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { releaseDepartureSeats } from '@/lib/inventory'
+import { sendBookingConfirmation } from '@/lib/email'
 
 export const runtime = 'nodejs'
 
@@ -42,12 +43,25 @@ export async function POST(req: NextRequest) {
         const pi = event.data.object as Stripe.PaymentIntent
         const bookingId = pi.metadata?.bookingId
         if (!bookingId) break
-        await payload.update({
+        const confirmed = await payload.update({
           collection: 'bookings',
           id: Number(bookingId),
           overrideAccess: true,
           data: { status: 'CONFIRMED', holdExpiresAt: null },
         })
+        // Fire-and-forget confirmation email (never blocks the webhook ack).
+        if (confirmed.guestEmail) {
+          await sendBookingConfirmation({
+            reference: confirmed.reference,
+            email: confirmed.guestEmail,
+            routeName: confirmed.routeName,
+            serviceDate: confirmed.serviceDate,
+            departureTime: confirmed.departureTime,
+            seats: confirmed.seats,
+            totalCents: confirmed.totalCents,
+            currency: confirmed.currency,
+          })
+        }
         const payment = await findPaymentByIntent(pi.id)
         if (payment) {
           await payload.update({

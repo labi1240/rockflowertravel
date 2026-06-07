@@ -194,7 +194,15 @@ export async function seed(payload: Payload): Promise<void> {
     })
     log(`admin created: ${adminEmail} (password: ${adminPassword} — change after first login)`)
   } else {
-    log(`admin already exists: ${adminEmail}`)
+    // Ensure the admin role is set and reset the password to the known seed default
+    // (handles users created before the role/password logic existed).
+    await payload.update({
+      collection: 'users',
+      id: existing.docs[0].id,
+      data: { roles: ['admin'], password: adminPassword },
+      overrideAccess: true,
+    })
+    log(`admin ensured (role=admin, password reset): ${adminEmail} / ${adminPassword}`)
   }
 
   log('seed complete.')

@@ -30,6 +30,9 @@ export default buildConfig({
       title: 'RockFlower Travels — Operations',
       description: 'Shuttle booking operations center',
     },
+    components: {
+      beforeDashboard: ['/components/admin/DashboardKPIs#DashboardKPIs'],
+    },
   },
   collections: [
     // People

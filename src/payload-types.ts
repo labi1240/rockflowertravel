@@ -249,12 +249,342 @@ export interface Route {
   isPremium?: boolean | null;
   description?: string | null;
   /**
+   * Hero/banner photo shown on the route landing page and as a card fallback.
+   */
+  heroImage?: (number | null) | Media;
+  /**
    * Legacy inventory tag for the 3 original routes. Leave empty for new routes.
    */
   kind?: ('SUNRISE_EXPRESS' | 'DAYTIME_CIRCUIT' | 'EVENING_RETURN') | null;
+  /**
+   * Public SEO URL slug, e.g. moraine-lake-shuttle → /moraine-lake-shuttle. Leave blank to keep the route off the public landing-page URLs. Published routes only.
+   */
+  seoSlug?: string | null;
+  /**
+   * Search + social metadata. Falls back to the route name/description when blank.
+   */
+  seo?: {
+    /**
+     * Defaults to "{displayName} | RockFlower Travels".
+     */
+    metaTitle?: string | null;
+    /**
+     * Defaults to the route description. ~155 chars ideal.
+     */
+    metaDescription?: string | null;
+    /**
+     * Social share image. Defaults to the hero image.
+     */
+    ogImage?: (number | null) | Media;
+  };
+  /**
+   * Top-of-page hero. The price + book button are generated from this route’s fares.
+   */
+  hero?: {
+    /**
+     * Small pill above the headline, e.g. "Premium service".
+     */
+    badge?: string | null;
+    /**
+     * Defaults to the route display name.
+     */
+    headline?: string | null;
+    /**
+     * Defaults to the route description.
+     */
+    subheadline?: string | null;
+    /**
+     * e.g. 4.9
+     */
+    ratingValue?: number | null;
+    /**
+     * Number of reviews.
+     */
+    ratingCount?: number | null;
+    /**
+     * e.g. Google, Viator.
+     */
+    ratingSource?: string | null;
+  };
+  /**
+   * Stack and reorder the page’s content sections. Renders in order, below the hero.
+   */
+  layout?:
+    | (
+        | HighlightsBlock
+        | FeatureGridBlock
+        | InclusionsBlock
+        | ItineraryBlock
+        | RouteMapBlock
+        | GalleryBlock
+        | ThingsToDoBlock
+        | TestimonialsBlock
+        | FaqBlock
+        | RichTextBlock
+        | CtaBlock
+      )[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HighlightsBlock".
+ */
+export interface HighlightsBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'highlights';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeatureGridBlock".
+ */
+export interface FeatureGridBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  /**
+   * Optional intro line under the heading.
+   */
+  subheading?: string | null;
+  features?:
+    | {
+        icon?: ('check' | 'clock' | 'pin' | 'calendar' | 'shield' | 'star') | null;
+        title: string;
+        body?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'featureGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "InclusionsBlock".
+ */
+export interface InclusionsBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  includes?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  excludes?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'inclusions';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ItineraryBlock".
+ */
+export interface ItineraryBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  steps?:
+    | {
+        title: string;
+        description?: string | null;
+        /**
+         * Optional, e.g. "1 hr 30 min" or "Stop: 45 min".
+         */
+        duration?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'itinerary';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RouteMapBlock".
+ */
+export interface RouteMapBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  /**
+   * Optional intro line under the heading.
+   */
+  subheading?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'routeMap';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  images?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ThingsToDoBlock".
+ */
+export interface ThingsToDoBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  intro?: string | null;
+  items?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  image?: (number | null) | Media;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'thingsToDo';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock".
+ */
+export interface TestimonialsBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  reviews?:
+    | {
+        name: string;
+        location?: string | null;
+        /**
+         * Stars, 1–5.
+         */
+        rating?: number | null;
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'testimonials';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock".
+ */
+export interface FaqBlock {
+  /**
+   * Section heading. Leave blank to hide the heading row.
+   */
+  heading?: string | null;
+  items?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock".
+ */
+export interface RichTextBlock {
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'richText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CtaBlock".
+ */
+export interface CtaBlock {
+  heading: string;
+  body?: string | null;
+  /**
+   * Opens the booking modal for this page’s default fare.
+   */
+  buttonLabel?: string | null;
+  /**
+   * Optional background image.
+   */
+  image?: (number | null) | Media;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'cta';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -313,6 +643,10 @@ export interface Fare {
    * Legacy inventory-bucket tag (RouteKind value as string). Optional for new fares.
    */
   routeKind?: string | null;
+  /**
+   * Card/marketing photo for this fare. Falls back to the route image, then a gradient.
+   */
+  image?: (number | null) | Media;
   label: string;
   short: string;
   origin: string;
@@ -442,25 +776,6 @@ export interface Payment {
   status: 'REQUIRES_PAYMENT' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -653,10 +968,213 @@ export interface RoutesSelect<T extends boolean = true> {
   tier?: T;
   isPremium?: T;
   description?: T;
+  heroImage?: T;
   kind?: T;
+  seoSlug?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  hero?:
+    | T
+    | {
+        badge?: T;
+        headline?: T;
+        subheadline?: T;
+        ratingValue?: T;
+        ratingCount?: T;
+        ratingSource?: T;
+      };
+  layout?:
+    | T
+    | {
+        highlights?: T | HighlightsBlockSelect<T>;
+        featureGrid?: T | FeatureGridBlockSelect<T>;
+        inclusions?: T | InclusionsBlockSelect<T>;
+        itinerary?: T | ItineraryBlockSelect<T>;
+        routeMap?: T | RouteMapBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        thingsToDo?: T | ThingsToDoBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        cta?: T | CtaBlockSelect<T>;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HighlightsBlock_select".
+ */
+export interface HighlightsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  items?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeatureGridBlock_select".
+ */
+export interface FeatureGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  features?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        body?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "InclusionsBlock_select".
+ */
+export interface InclusionsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  includes?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  excludes?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ItineraryBlock_select".
+ */
+export interface ItineraryBlockSelect<T extends boolean = true> {
+  heading?: T;
+  steps?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        duration?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RouteMapBlock_select".
+ */
+export interface RouteMapBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock_select".
+ */
+export interface GalleryBlockSelect<T extends boolean = true> {
+  heading?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ThingsToDoBlock_select".
+ */
+export interface ThingsToDoBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  items?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  image?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock_select".
+ */
+export interface TestimonialsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  reviews?:
+    | T
+    | {
+        name?: T;
+        location?: T;
+        rating?: T;
+        text?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock_select".
+ */
+export interface FaqBlockSelect<T extends boolean = true> {
+  heading?: T;
+  items?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock_select".
+ */
+export interface RichTextBlockSelect<T extends boolean = true> {
+  content?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CtaBlock_select".
+ */
+export interface CtaBlockSelect<T extends boolean = true> {
+  heading?: T;
+  body?: T;
+  buttonLabel?: T;
+  image?: T;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -692,6 +1210,7 @@ export interface FaresSelect<T extends boolean = true> {
   tier?: T;
   route?: T;
   routeKind?: T;
+  image?: T;
   label?: T;
   short?: T;
   origin?: T;

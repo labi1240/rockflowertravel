@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { Suspense, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function SignInPage() {
+// useSearchParams() triggers a client-render bailout, so the form is isolated
+// and wrapped in a Suspense boundary (default export below) for static builds.
+function SignInForm() {
   const router = useRouter()
   const params = useSearchParams()
   const redirectTo = params.get('redirect') || '/my-trips'
@@ -95,5 +97,13 @@ export default function SignInPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-mist-50" />}>
+      <SignInForm />
+    </Suspense>
   )
 }

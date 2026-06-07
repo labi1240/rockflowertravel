@@ -3,6 +3,7 @@ import Hero from '@/components/Hero';
 import ShuttleTracker from '@/components/ShuttleTracker';
 import SocialProof from '@/components/SocialProof';
 import ScheduleDashboard from '@/components/ScheduleDashboard';
+import AllFares from '@/components/AllFares';
 import RouteMap from '@/components/RouteMap';
 import Faq from '@/components/Faq';
 import Footer from '@/components/Footer';
@@ -21,6 +22,7 @@ export default function Home() {
         <ShuttleTracker />
         <SocialProof />
         <ScheduleDashboard />
+        <AllFares />
         <RouteMap />
         <Faq />
       </main>

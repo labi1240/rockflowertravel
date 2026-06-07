@@ -54,3 +54,8 @@ node_modules/
 
 # Claude local overrides
 .claude/settings.local.json
+
+# Local design references / screenshots / scratch PDFs — not source
+/RockFlower_Daily_Shuttle_Schedule.pdf
+/scrnli_*.png
+/screencapture-*.png
