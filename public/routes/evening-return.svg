@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" role="img" aria-label="Evening Return placeholder — replace with real photo">
+  <defs>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#4c1d95"/>
+      <stop offset="100%" stop-color="#db2777"/>
+    </linearGradient>
+    <linearGradient id="mtn3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#dusk)"/>
+  <circle cx="980" cy="180" r="6" fill="#fff" opacity="0.9"/>
+  <circle cx="850" cy="120" r="4" fill="#fff" opacity="0.7"/>
+  <circle cx="720" cy="220" r="5" fill="#fff" opacity="0.8"/>
+  <circle cx="600" cy="100" r="3" fill="#fff" opacity="0.6"/>
+  <circle cx="1100" cy="240" r="4" fill="#fff" opacity="0.7"/>
+  <polygon points="0,520 180,340 360,460 540,300 720,420 900,310 1080,450 1200,380 1200,750 0,750" fill="url(#mtn3)"/>
+  <polygon points="0,620 200,500 400,580 600,460 800,560 1000,470 1200,570 1200,750 0,750" fill="#000" opacity="0.6"/>
+  <text x="60" y="120" font-family="system-ui,-apple-system,sans-serif" font-weight="800" font-size="48" fill="#fff" letter-spacing="-1.5">Evening Return</text>
+  <text x="60" y="160" font-family="system-ui,-apple-system,sans-serif" font-weight="600" font-size="18" fill="#fbcfe8" opacity="0.9" letter-spacing="2">PLACEHOLDER — REPLACE WITH PHOTO</text>
+</svg>

@@ -48,3 +48,9 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Reference copy of the old Next.js+Prisma app (contains secrets, nested git) — never commit
+/shuttle_service
+
+# Claude local overrides
+.claude/settings.local.json

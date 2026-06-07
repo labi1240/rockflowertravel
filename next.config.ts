@@ -9,9 +9,11 @@ const dirname = path.dirname(__filename)
 const nextConfig: NextConfig = {
   images: {
     localPatterns: [
-      {
-        pathname: '/api/media/file/**',
-      },
+      { pathname: '/api/media/file/**' },
+      // Public marketing assets (logos, location photos, hero banner).
+      { pathname: '/images/**' },
+      { pathname: '/main_logo.png' },
+      { pathname: '/white_logo.png' },
     ],
   },
   webpack: (webpackConfig) => {

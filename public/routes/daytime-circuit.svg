@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" role="img" aria-label="Daytime Circuit placeholder — replace with real photo">
+  <defs>
+    <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="60%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="mtn2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#sky2)"/>
+  <polygon points="0,400 220,180 420,300 620,140 820,260 1020,180 1200,310 1200,520 0,520" fill="url(#mtn2)"/>
+  <polygon points="0,460 200,330 400,410 600,290 800,380 1000,310 1200,400 1200,520 0,520" fill="#f8fafc" opacity="0.6"/>
+  <rect y="520" width="1200" height="230" fill="url(#lake)"/>
+  <text x="60" y="120" font-family="system-ui,-apple-system,sans-serif" font-weight="800" font-size="48" fill="#fff" letter-spacing="-1.5">Daytime Circuit</text>
+  <text x="60" y="160" font-family="system-ui,-apple-system,sans-serif" font-weight="600" font-size="18" fill="#e0f2fe" opacity="0.9" letter-spacing="2">PLACEHOLDER — REPLACE WITH PHOTO</text>
+</svg>

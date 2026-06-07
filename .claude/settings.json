@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"=== old src tree \\(3 levels\\) ===\")",
+      "Bash(find /Users/lovepreetgill/developer/travel/rockflowertravels/shuttle_service/src -maxdepth 3 -type f)",
+      "Bash(cross-env NODE_OPTIONS=--no-deprecation pnpm payload generate:types)",
+      "Bash(NODE_OPTIONS=--no-deprecation pnpm run generate:types)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(NODE_OPTIONS=--no-deprecation timeout 90 pnpm exec payload migrate:create initial)",
+      "Bash(awk '/CREATE TABLE \"departure_inventory\"/,/\\\\\\);/' src/migrations/*.ts)",
+      "Bash(NODE_OPTIONS=--no-deprecation pnpm exec payload migrate:status)",
+      "mcp__Neon__list_projects",
+      "mcp__Neon__run_sql",
+      "Bash(jobs)"
+    ]
+  }
+}

@@ -6,7 +6,16 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { Users } from './collections/Users'
+import { Customers } from './collections/Customers'
 import { Media } from './collections/Media'
+import { Stops } from './collections/Stops'
+import { Routes } from './collections/Routes'
+import { ScheduleTemplates } from './collections/ScheduleTemplates'
+import { Fares } from './collections/Fares'
+import { Vehicles } from './collections/Vehicles'
+import { DepartureInventory } from './collections/DepartureInventory'
+import { Bookings } from './collections/Bookings'
+import { Payments } from './collections/Payments'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -17,14 +26,37 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    meta: {
+      title: 'RockFlower Travels — Operations',
+      description: 'Shuttle booking operations center',
+    },
   },
-  collections: [Users, Media],
+  collections: [
+    // People
+    Users,
+    Customers,
+    // Catalog
+    Stops,
+    Routes,
+    ScheduleTemplates,
+    Fares,
+    Vehicles,
+    // Operations
+    DepartureInventory,
+    Bookings,
+    Payments,
+    // System
+    Media,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
+    // Schema is managed via committed migrations (src/migrations), not dev push — this
+    // keeps the project drift-free (the old app's db-push drift was a known pain point).
+    push: false,
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },

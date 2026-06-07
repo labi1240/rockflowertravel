@@ -64,10 +64,20 @@ export type SupportedTimezones =
 export interface Config {
   auth: {
     users: UserAuthOperations;
+    customers: CustomerAuthOperations;
   };
   blocks: {};
   collections: {
     users: User;
+    customers: Customer;
+    stops: Stop;
+    routes: Route;
+    'schedule-templates': ScheduleTemplate;
+    fares: Fare;
+    vehicles: Vehicle;
+    'departure-inventory': DepartureInventory;
+    bookings: Booking;
+    payments: Payment;
     media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -77,6 +87,15 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
+    stops: StopsSelect<false> | StopsSelect<true>;
+    routes: RoutesSelect<false> | RoutesSelect<true>;
+    'schedule-templates': ScheduleTemplatesSelect<false> | ScheduleTemplatesSelect<true>;
+    fares: FaresSelect<false> | FaresSelect<true>;
+    vehicles: VehiclesSelect<false> | VehiclesSelect<true>;
+    'departure-inventory': DepartureInventorySelect<false> | DepartureInventorySelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
+    payments: PaymentsSelect<false> | PaymentsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -84,7 +103,7 @@ export interface Config {
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
   fallbackLocale: null;
   globals: {};
@@ -93,7 +112,7 @@ export interface Config {
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: User | Customer;
   jobs: {
     tasks: unknown;
     workflows: unknown;
@@ -117,12 +136,32 @@ export interface UserAuthOperations {
     password: string;
   };
 }
+export interface CustomerAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
-  id: string;
+  id: number;
+  name?: string | null;
+  roles: ('admin' | 'operator')[];
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -144,10 +183,272 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'customers';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stops".
+ */
+export interface Stop {
+  id: number;
+  /**
+   * Stable code, e.g. BANFF, SAMSON, LL_LAKESHORE, MORAINE.
+   */
+  code: string;
+  name: string;
+  /**
+   * Map coordinate [longitude, latitude].
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  location?: [number, number] | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "routes".
+ */
+export interface Route {
+  id: number;
+  /**
+   * Stable identity, e.g. sunrise-express, daytime-circuit.
+   */
+  slug: string;
+  displayName: string;
+  /**
+   * Grouping tag: 'sunrise' | 'daytime' | 'evening' | custom.
+   */
+  tier: string;
+  isPremium?: boolean | null;
+  description?: string | null;
+  /**
+   * Legacy inventory tag for the 3 original routes. Leave empty for new routes.
+   */
+  kind?: ('SUNRISE_EXPRESS' | 'DAYTIME_CIRCUIT' | 'EVENING_RETURN') | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "schedule-templates".
+ */
+export interface ScheduleTemplate {
+  id: number;
+  route: number | Route;
+  label: string;
+  sortOrder: number;
+  activeFrom?: string | null;
+  activeUntil?: string | null;
+  /**
+   * Ordered segments. Uncheck "bookable" for positioning/deadhead legs.
+   */
+  legs?:
+    | {
+        sequence: number;
+        fromStop: number | Stop;
+        toStop: number | Stop;
+        /**
+         * Minutes from midnight
+         */
+        departMin: number;
+        /**
+         * Minutes from midnight
+         */
+        arriveMin: number;
+        bookable?: boolean | null;
+        /**
+         * CAD cents, pre-GST (reference).
+         */
+        priceCents?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fares".
+ */
+export interface Fare {
+  id: number;
+  /**
+   * Stable fare id, e.g. banff-ll, sunrise-banff-moraine.
+   */
+  slug: string;
+  tier: 'sunrise' | 'daytime' | 'evening';
+  /**
+   * The route this fare sells (drives inventory keying).
+   */
+  route?: (number | null) | Route;
+  /**
+   * Legacy inventory-bucket tag (RouteKind value as string). Optional for new fares.
+   */
+  routeKind?: string | null;
+  label: string;
+  short: string;
+  origin: string;
+  destination: string;
+  /**
+   * Base fare per seat, CAD cents, pre-GST.
+   */
+  priceCents: number;
+  /**
+   * Moraine toll per passenger, CAD cents.
+   */
+  tollCents?: number | null;
+  roundTrip?: boolean | null;
+  premium?: boolean | null;
+  /**
+   * Display default departure, e.g. "7:00 AM".
+   */
+  defaultTime: string;
+  note?: string | null;
+  /**
+   * Hide from selectors + reject at checkout when off.
+   */
+  active?: boolean | null;
+  sortOrder?: number | null;
+  /**
+   * Optional temporary sale. Active when now ∈ [starts, ends].
+   */
+  sale?: {
+    /**
+     * Effective per-seat price while the sale is active. Must be < base price.
+     */
+    salePriceCents?: number | null;
+    saleStartsAt?: string | null;
+    saleEndsAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "vehicles".
+ */
+export interface Vehicle {
+  id: number;
+  code: string;
+  seatCapacity: number;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "departure-inventory".
+ */
+export interface DepartureInventory {
+  id: number;
+  routeSlug: string;
+  serviceDate: string;
+  /**
+   * Displayed time, e.g. "7:00 AM" — must match Booking.departureTime.
+   */
+  departureTime: string;
+  seatsTotal: number;
+  seatsBooked: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  reference: string;
+  /**
+   * Linked rider account (null for guest checkout).
+   */
+  customer?: (number | null) | Customer;
+  status: 'PENDING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'REFUNDED' | 'EXPIRED';
+  guestFirstName?: string | null;
+  guestLastName?: string | null;
+  guestEmail?: string | null;
+  guestPhone?: string | null;
+  /**
+   * Display name snapshot.
+   */
+  routeName?: string | null;
+  routeSlug?: string | null;
+  /**
+   * Legacy enum tag; null for admin-authored routes.
+   */
+  routeKind?: string | null;
+  serviceDate?: string | null;
+  departureTime?: string | null;
+  seats: number;
+  subtotalCents: number;
+  gstCents: number;
+  totalCents: number;
+  currency: string;
+  /**
+   * 15-min seat hold; cleared on CONFIRMED.
+   */
+  holdExpiresAt?: string | null;
+  refundedAt?: string | null;
+  /**
+   * Admin email that initiated the refund.
+   */
+  refundedBy?: string | null;
+  refundReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments".
+ */
+export interface Payment {
+  id: number;
+  booking: number | Booking;
+  stripePaymentIntentId?: string | null;
+  stripeCheckoutSessionId?: string | null;
+  stripeCustomerId?: string | null;
+  amountSubtotalCents: number;
+  gstCents: number;
+  amountTotalCents: number;
+  currency: string;
+  status: 'REQUIRES_PAYMENT' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
-  id: string;
+  id: number;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -166,7 +467,7 @@ export interface Media {
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -183,21 +484,62 @@ export interface PayloadKv {
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
         relationTo: 'users';
-        value: string | User;
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'stops';
+        value: number | Stop;
+      } | null)
+    | ({
+        relationTo: 'routes';
+        value: number | Route;
+      } | null)
+    | ({
+        relationTo: 'schedule-templates';
+        value: number | ScheduleTemplate;
+      } | null)
+    | ({
+        relationTo: 'fares';
+        value: number | Fare;
+      } | null)
+    | ({
+        relationTo: 'vehicles';
+        value: number | Vehicle;
+      } | null)
+    | ({
+        relationTo: 'departure-inventory';
+        value: number | DepartureInventory;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'payments';
+        value: number | Payment;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: string | User;
-  };
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -206,11 +548,16 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
-  user: {
-    relationTo: 'users';
-    value: string | User;
-  };
+  id: number;
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      };
   key?: string | null;
   value?:
     | {
@@ -229,7 +576,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -240,6 +587,8 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -256,6 +605,184 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  phone?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stops_select".
+ */
+export interface StopsSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  location?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "routes_select".
+ */
+export interface RoutesSelect<T extends boolean = true> {
+  slug?: T;
+  displayName?: T;
+  tier?: T;
+  isPremium?: T;
+  description?: T;
+  kind?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "schedule-templates_select".
+ */
+export interface ScheduleTemplatesSelect<T extends boolean = true> {
+  route?: T;
+  label?: T;
+  sortOrder?: T;
+  activeFrom?: T;
+  activeUntil?: T;
+  legs?:
+    | T
+    | {
+        sequence?: T;
+        fromStop?: T;
+        toStop?: T;
+        departMin?: T;
+        arriveMin?: T;
+        bookable?: T;
+        priceCents?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fares_select".
+ */
+export interface FaresSelect<T extends boolean = true> {
+  slug?: T;
+  tier?: T;
+  route?: T;
+  routeKind?: T;
+  label?: T;
+  short?: T;
+  origin?: T;
+  destination?: T;
+  priceCents?: T;
+  tollCents?: T;
+  roundTrip?: T;
+  premium?: T;
+  defaultTime?: T;
+  note?: T;
+  active?: T;
+  sortOrder?: T;
+  sale?:
+    | T
+    | {
+        salePriceCents?: T;
+        saleStartsAt?: T;
+        saleEndsAt?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "vehicles_select".
+ */
+export interface VehiclesSelect<T extends boolean = true> {
+  code?: T;
+  seatCapacity?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "departure-inventory_select".
+ */
+export interface DepartureInventorySelect<T extends boolean = true> {
+  routeSlug?: T;
+  serviceDate?: T;
+  departureTime?: T;
+  seatsTotal?: T;
+  seatsBooked?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  reference?: T;
+  customer?: T;
+  status?: T;
+  guestFirstName?: T;
+  guestLastName?: T;
+  guestEmail?: T;
+  guestPhone?: T;
+  routeName?: T;
+  routeSlug?: T;
+  routeKind?: T;
+  serviceDate?: T;
+  departureTime?: T;
+  seats?: T;
+  subtotalCents?: T;
+  gstCents?: T;
+  totalCents?: T;
+  currency?: T;
+  holdExpiresAt?: T;
+  refundedAt?: T;
+  refundedBy?: T;
+  refundReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments_select".
+ */
+export interface PaymentsSelect<T extends boolean = true> {
+  booking?: T;
+  stripePaymentIntentId?: T;
+  stripeCheckoutSessionId?: T;
+  stripeCustomerId?: T;
+  amountSubtotalCents?: T;
+  gstCents?: T;
+  amountTotalCents?: T;
+  currency?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
