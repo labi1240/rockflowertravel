@@ -78,6 +78,7 @@ export interface Config {
     'departure-inventory': DepartureInventory;
     bookings: Booking;
     payments: Payment;
+    messages: Message;
     media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -96,6 +97,7 @@ export interface Config {
     'departure-inventory': DepartureInventorySelect<false> | DepartureInventorySelect<true>;
     bookings: BookingsSelect<false> | BookingsSelect<true>;
     payments: PaymentsSelect<false> | PaymentsSelect<true>;
+    messages: MessagesSelect<false> | MessagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -780,6 +782,33 @@ export interface Payment {
   createdAt: string;
 }
 /**
+ * Customer ↔ support messages, grouped by booking.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages".
+ */
+export interface Message {
+  id: number;
+  booking: number | Booking;
+  /**
+   * Thread owner. Set automatically from the signed-in account.
+   */
+  customer: number | Customer;
+  /**
+   * Set automatically from who is signed in.
+   */
+  sender: 'customer' | 'staff';
+  /**
+   * Staff member who replied (audit). Empty for customer messages.
+   */
+  staffUser?: (number | null) | User;
+  body: string;
+  readByCustomerAt?: string | null;
+  readByStaffAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -842,6 +871,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'payments';
         value: number | Payment;
+      } | null)
+    | ({
+        relationTo: 'messages';
+        value: number | Message;
       } | null)
     | ({
         relationTo: 'media';
@@ -1302,6 +1335,21 @@ export interface PaymentsSelect<T extends boolean = true> {
   amountTotalCents?: T;
   currency?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages_select".
+ */
+export interface MessagesSelect<T extends boolean = true> {
+  booking?: T;
+  customer?: T;
+  sender?: T;
+  staffUser?: T;
+  body?: T;
+  readByCustomerAt?: T;
+  readByStaffAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

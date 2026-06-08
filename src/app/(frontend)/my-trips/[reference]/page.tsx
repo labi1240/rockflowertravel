@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import BookingModal from '@/components/BookingModal'
 import TripQR from '@/components/TripQR'
+import MessageThread from '@/components/MessageThread'
 import { getPayloadClient } from '@/lib/payload'
 import { getCurrentCustomer } from '@/lib/customer-auth'
 import { absoluteUrl } from '@/lib/seo'
@@ -71,6 +72,28 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   })
   const payment = payments[0]
 
+  // Support thread for this booking. Mark any unread staff replies as read now that
+  // the customer is viewing them, then load the (now up-to-date) conversation.
+  await payload.update({
+    collection: 'messages',
+    where: {
+      booking: { equals: booking.id },
+      sender: { equals: 'staff' },
+      readByCustomerAt: { equals: null },
+    },
+    data: { readByCustomerAt: new Date().toISOString() },
+    overrideAccess: true,
+  }).catch(() => {})
+
+  const { docs: messages } = await payload.find({
+    collection: 'messages',
+    where: { booking: { equals: booking.id } },
+    sort: 'createdAt',
+    limit: 200,
+    depth: 0,
+    overrideAccess: true,
+  })
+
   const statusInfo = STATUS_DISPLAY[booking.status] ?? STATUS_DISPLAY.PENDING_PAYMENT
   const tagline = booking.routeKind ? ROUTE_TAGLINE[booking.routeKind] : undefined
   const routeTitle = booking.routeName ?? 'Shuttle booking'
@@ -124,9 +147,14 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
               )}
             </Panel>
 
+            <MessageThread
+              bookingId={booking.id}
+              initialMessages={messages.map((m) => ({ id: m.id, sender: m.sender, body: m.body, createdAt: m.createdAt }))}
+            />
+
             <p className="text-xs text-mist-500">
-              Need to make a change?{' '}
-              <a href="mailto:hello@rockflowertravels.ca" className="text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">Email us</a>.
+              Prefer email? Reach us at{' '}
+              <a href="mailto:hello@rockflowertravels.ca" className="text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">hello@rockflowertravels.ca</a>.
             </p>
           </div>
         </section>

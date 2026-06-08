@@ -17,6 +17,7 @@ import { Vehicles } from './collections/Vehicles'
 import { DepartureInventory } from './collections/DepartureInventory'
 import { Bookings } from './collections/Bookings'
 import { Payments } from './collections/Payments'
+import { Messages } from './collections/Messages'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -49,6 +50,7 @@ export default buildConfig({
     DepartureInventory,
     Bookings,
     Payments,
+    Messages,
     // System
     Media,
   ],

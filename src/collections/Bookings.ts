@@ -116,6 +116,20 @@ export const Bookings: CollectionConfig = {
         components: { Field: '/components/admin/RefundButton#RefundButton' },
       },
     },
+    // Support thread with the rider. Messages live in the `messages` collection;
+    // this UI field renders the per-booking conversation inline.
+    {
+      type: 'collapsible',
+      label: 'Messages',
+      admin: { initCollapsed: true },
+      fields: [
+        {
+          name: 'bookingMessages',
+          type: 'ui',
+          admin: { components: { Field: '/components/admin/BookingMessages#BookingMessages' } },
+        },
+      ],
+    },
     // Refund audit — REFUNDED status itself is written by the Stripe webhook.
     {
       type: 'collapsible',
