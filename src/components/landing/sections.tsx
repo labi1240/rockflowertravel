@@ -36,23 +36,45 @@ function Container({ children, className = '' }: { children: React.ReactNode; cl
   return <div className={`mx-auto max-w-5xl px-4 sm:px-6 ${className}`}>{children}</div>
 }
 
-export function HighlightsSection({ block }: { block: HighlightsBlock }) {
+/**
+ * Wraps a rail-eligible section's inner content. In the default (full-width)
+ * layout it renders the usual banded `<section>` + centered `<Container>`. When
+ * `bare` is set, the section is rendered inside the landing page's content rail
+ * (the left column beside the sticky booking card), so we drop the band/Container
+ * and let the column own width + vertical spacing.
+ */
+function RailBand({
+  bare,
+  children,
+  containerClassName = '',
+}: {
+  bare?: boolean
+  children: React.ReactNode
+  containerClassName?: string
+}) {
+  if (bare) return <div>{children}</div>
+  return (
+    <section className="py-12">
+      <Container className={containerClassName}>{children}</Container>
+    </section>
+  )
+}
+
+export function HighlightsSection({ block, bare }: { block: HighlightsBlock; bare?: boolean }) {
   const items = block.items ?? []
   if (!items.length) return null
   return (
-    <section className="py-12">
-      <Container>
-        <SectionHeading heading={block.heading} />
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {items.map((it) => (
-            <li key={it.id ?? it.text} className="flex items-start gap-3 rounded-xl bg-white p-4 text-sm text-mist-800 shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">
-              <span className="mt-0.5 text-evergreen-600">✓</span>
-              {it.text}
-            </li>
-          ))}
-        </ul>
-      </Container>
-    </section>
+    <RailBand bare={bare}>
+      <SectionHeading heading={block.heading} />
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {items.map((it) => (
+          <li key={it.id ?? it.text} className="flex items-start gap-3 rounded-xl bg-white p-4 text-sm text-mist-800 shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">
+            <span className="mt-0.5 text-evergreen-600">✓</span>
+            {it.text}
+          </li>
+        ))}
+      </ul>
+    </RailBand>
   )
 }
 
@@ -79,15 +101,14 @@ export function FeatureGridSection({ block }: { block: FeatureGridBlock }) {
   )
 }
 
-export function InclusionsSection({ block }: { block: InclusionsBlock }) {
+export function InclusionsSection({ block, bare }: { block: InclusionsBlock; bare?: boolean }) {
   const includes = block.includes ?? []
   const excludes = block.excludes ?? []
   if (!includes.length && !excludes.length) return null
   return (
-    <section className="py-12">
-      <Container>
-        <SectionHeading heading={block.heading} />
-        <div className="grid gap-8 sm:grid-cols-2">
+    <RailBand bare={bare}>
+      <SectionHeading heading={block.heading} />
+      <div className="grid gap-8 sm:grid-cols-2">
           {includes.length > 0 && (
             <div className="rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">
               <h3 className="font-display text-base font-bold text-evergreen-800">What&apos;s included</h3>
@@ -114,37 +135,34 @@ export function InclusionsSection({ block }: { block: InclusionsBlock }) {
               </ul>
             </div>
           )}
-        </div>
-      </Container>
-    </section>
+      </div>
+    </RailBand>
   )
 }
 
-export function ItinerarySection({ block }: { block: ItineraryBlock }) {
+export function ItinerarySection({ block, bare }: { block: ItineraryBlock; bare?: boolean }) {
   const steps = block.steps ?? []
   if (!steps.length) return null
   return (
-    <section className="py-12">
-      <Container>
-        <SectionHeading heading={block.heading} />
-        <ol className="relative space-y-6 border-l-2 border-mist-200 pl-8">
-          {steps.map((s, i) => (
-            <li key={s.id ?? `${s.title}-${i}`} className="relative">
-              <span className="absolute -left-[41px] flex size-7 items-center justify-center rounded-full bg-evergreen-700 text-xs font-bold text-white">
-                {i + 1}
-              </span>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="font-display text-base font-bold text-evergreen-800">{s.title}</h3>
-                {s.duration && (
-                  <span className="rounded-full bg-mist-100 px-2.5 py-0.5 text-xs font-medium text-mist-500">{s.duration}</span>
-                )}
-              </div>
-              {s.description && <p className="mt-1.5 text-sm text-mist-700">{s.description}</p>}
-            </li>
-          ))}
-        </ol>
-      </Container>
-    </section>
+    <RailBand bare={bare}>
+      <SectionHeading heading={block.heading} />
+      <ol className="relative space-y-6 border-l-2 border-mist-200 pl-8">
+        {steps.map((s, i) => (
+          <li key={s.id ?? `${s.title}-${i}`} className="relative">
+            <span className="absolute -left-[41px] flex size-7 items-center justify-center rounded-full bg-evergreen-700 text-xs font-bold text-white">
+              {i + 1}
+            </span>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="font-display text-base font-bold text-evergreen-800">{s.title}</h3>
+              {s.duration && (
+                <span className="rounded-full bg-mist-100 px-2.5 py-0.5 text-xs font-medium text-mist-500">{s.duration}</span>
+              )}
+            </div>
+            {s.description && <p className="mt-1.5 text-sm text-mist-700">{s.description}</p>}
+          </li>
+        ))}
+      </ol>
+    </RailBand>
   )
 }
 
@@ -264,14 +282,13 @@ export function TestimonialsSection({
   )
 }
 
-export function FaqSection({ block }: { block: FaqBlock }) {
+export function FaqSection({ block, bare }: { block: FaqBlock; bare?: boolean }) {
   const items = block.items ?? []
   if (!items.length) return null
   return (
-    <section className="py-14">
-      <Container className="max-w-3xl">
-        <SectionHeading heading={block.heading ?? 'Frequently asked'} />
-        <div className="overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">
+    <RailBand bare={bare} containerClassName="max-w-3xl">
+      <SectionHeading heading={block.heading ?? 'Frequently asked'} />
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)] ring-1 ring-mist-200/60">
           {items.map((it, i) => (
             <details key={it.id ?? i} className="group border-t border-mist-200 first:border-t-0">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-left transition-colors [&::-webkit-details-marker]:hidden hover:bg-mist-50/80 group-open:bg-sunrise-50/40">
@@ -282,22 +299,19 @@ export function FaqSection({ block }: { block: FaqBlock }) {
                   </svg>
                 </span>
               </summary>
-              <p className="px-6 pb-6 pt-1 text-[15px] leading-relaxed text-mist-700">{it.answer}</p>
-            </details>
-          ))}
-        </div>
-      </Container>
-    </section>
+            <p className="px-6 pb-6 pt-1 text-[15px] leading-relaxed text-mist-700">{it.answer}</p>
+          </details>
+        ))}
+      </div>
+    </RailBand>
   )
 }
 
-export function RichTextSection({ block }: { block: RichTextBlock }) {
+export function RichTextSection({ block, bare }: { block: RichTextBlock; bare?: boolean }) {
   return (
-    <section className="py-12">
-      <Container className="max-w-3xl">
-        <LexicalContent data={block.content} />
-      </Container>
-    </section>
+    <RailBand bare={bare} containerClassName="max-w-3xl">
+      <LexicalContent data={block.content} />
+    </RailBand>
   )
 }
 

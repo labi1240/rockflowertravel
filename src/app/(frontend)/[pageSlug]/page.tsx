@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import BookingModal from '@/components/BookingModal'
 import JsonLd from '@/components/JsonLd'
-import BlockRenderer from '@/components/landing/BlockRenderer'
+import BlockRenderer, { RAIL_BLOCK_TYPES } from '@/components/landing/BlockRenderer'
 import HeroGallery from '@/components/landing/HeroGallery'
 import BookingCard from '@/components/landing/BookingCard'
 import StickyBookBar from '@/components/landing/StickyBookBar'
@@ -174,6 +174,13 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
       ]
     : []
 
+  // Tour-detail blocks flow in the content rail beside the sticky booking card;
+  // immersive full-bleed bands render full-width below. Order preserved within
+  // each group.
+  const layout = route.layout ?? []
+  const railBlocks = layout.filter((b) => RAIL_BLOCK_TYPES.has(b.blockType))
+  const wideBlocks = layout.filter((b) => !RAIL_BLOCK_TYPES.has(b.blockType))
+
   return (
     <>
       <JsonLd schema={buildSchema(route, pageSlug, fares)} />
@@ -208,9 +215,9 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
           <HeroGallery images={heroImages} alt={headline} />
         </section>
 
-        {/* Intro overview + sticky booking */}
+        {/* Intro overview + tour-detail rail, paired with the sticky booking card */}
         <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-3">
+          <div className="grid gap-10 lg:grid-cols-3 lg:items-start">
             <div className="lg:col-span-2">
               <h2 className="font-display text-2xl font-bold text-evergreen-800">Overview</h2>
               {subheadline && <p className="mt-3 text-mist-700">{subheadline}</p>}
@@ -223,6 +230,17 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
                   ))}
                 </ul>
               )}
+              {railBlocks.length > 0 && (
+                <div className="mt-12 space-y-12">
+                  <BlockRenderer
+                    blocks={railBlocks}
+                    fareId={defaultFare?.id ?? null}
+                    ratingValue={route.hero?.ratingValue}
+                    ratingCount={route.hero?.ratingCount}
+                    bare
+                  />
+                </div>
+              )}
             </div>
             <aside className="lg:col-span-1">
               <div className="lg:sticky lg:top-24">
@@ -232,9 +250,9 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
           </div>
         </section>
 
-        {/* Admin-authored content blocks */}
+        {/* Full-width immersive content blocks */}
         <BlockRenderer
-          blocks={route.layout}
+          blocks={wideBlocks}
           fareId={defaultFare?.id ?? null}
           ratingValue={route.hero?.ratingValue}
           ratingCount={route.hero?.ratingCount}
