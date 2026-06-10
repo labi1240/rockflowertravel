@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type CSSProperties } from "react"
+import { useMemo, type CSSProperties } from "react"
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -25,17 +25,25 @@ type LightRay = {
   intensity: number
 }
 
+// Deterministic per-seed "randomness" keeps server and client renders
+// identical, so rays can be computed during render instead of in a
+// client-only effect (Math.random would cause a hydration mismatch).
+const seeded = (seed: number) => {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453
+  return x - Math.floor(x)
+}
+
 const createRays = (count: number, cycle: number): LightRay[] => {
   if (count <= 0) return []
 
   return Array.from({ length: count }, (_, index) => {
-    const left = 8 + Math.random() * 84
-    const rotate = -28 + Math.random() * 56
-    const width = 160 + Math.random() * 160
-    const swing = 0.8 + Math.random() * 1.8
-    const delay = Math.random() * cycle
-    const duration = cycle * (0.75 + Math.random() * 0.5)
-    const intensity = 0.6 + Math.random() * 0.5
+    const left = 8 + seeded(index * 7 + 1) * 84
+    const rotate = -28 + seeded(index * 7 + 2) * 56
+    const width = 160 + seeded(index * 7 + 3) * 160
+    const swing = 0.8 + seeded(index * 7 + 4) * 1.8
+    const delay = seeded(index * 7 + 5) * cycle
+    const duration = cycle * (0.75 + seeded(index * 7 + 6) * 0.5)
+    const intensity = 0.6 + seeded(index * 7 + 7) * 0.5
 
     return {
       id: `${index}-${Math.round(left * 10)}`,
@@ -95,12 +103,8 @@ export function LightRays({
   ref,
   ...props
 }: LightRaysProps) {
-  const [rays, setRays] = useState<LightRay[]>([])
   const cycleDuration = Math.max(speed, 0.1)
-
-  useEffect(() => {
-    setRays(createRays(count, cycleDuration))
-  }, [count, cycleDuration])
+  const rays = useMemo(() => createRays(count, cycleDuration), [count, cycleDuration])
 
   return (
     <div

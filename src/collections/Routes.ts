@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isStaff, publicRead } from '../access'
+import { isStaff } from '../access'
 import { landingBlocks } from './blocks/landing'
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Map, { Source, Layer, Marker, type MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -168,7 +168,10 @@ export default function RouteMapInteractive() {
   const animationRef = useRef<number>(undefined);
   const didInitRef = useRef(false);
 
-  const isVisible = (route: Exclude<RouteKey, 'all'>) => filter === 'all' || filter === route;
+  const isVisible = useCallback(
+    (route: Exclude<RouteKey, 'all'>) => filter === 'all' || filter === route,
+    [filter],
+  );
 
   // Resolve real road geometry for every segment once on mount (routes are static).
   useEffect(() => {
@@ -196,7 +199,6 @@ export default function RouteMapInteractive() {
     };
   }, []);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const hasRoads = Object.keys(roadCoords).length > 0;
     const firstMount = !didInitRef.current;
@@ -231,7 +233,6 @@ export default function RouteMapInteractive() {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [filter, roadCoords]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Generate GeoJSON for the visible routes, drawn progressively along real roads.
   const routeData = useMemo(() => {
@@ -253,7 +254,7 @@ export default function RouteMapInteractive() {
       type: 'FeatureCollection' as const,
       features,
     };
-  }, [filter, isVisible, progress, roadCoords]);
+  }, [isVisible, progress, roadCoords]);
 
   // Smoothly fly to a stop when selected
   useEffect(() => {

@@ -16,6 +16,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { getFaresByRouteSlug, getLandingCards, type LandingCard } from '@/lib/fares-db'
 import { formatCents, type FareDTO } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
+import { requestNowMs } from '@/lib/utils'
 import type { Route } from '@/payload-types'
 
 // Marketing pages are admin-authored and re-priced from live fares — render per
@@ -156,7 +157,7 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
   if (!data) notFound()
   const { route, fares, related } = data
 
-  const nowMs = Date.now()
+  const nowMs = requestNowMs()
   const heroImages = collectHeroImages(route)
   const defaultFare = fares[0] ?? null
   const minPrice = defaultFare?.priceCents

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getPayloadClient } from '@/lib/payload'
 import { edmontonTodayUTC, edmontonTodayISO } from '@/lib/edmonton'
 import type { Booking } from '@/payload-types'
@@ -47,9 +48,9 @@ export async function DashboardKPIs() {
           </div>
         ))}
       </div>
-      <a href="/staff/manifest" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 600, color: 'var(--theme-success-500)' }}>
+      <Link href="/staff/manifest" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 600, color: 'var(--theme-success-500)' }}>
         → Open today&apos;s departure manifest
-      </a>
+      </Link>
     </div>
   )
 }

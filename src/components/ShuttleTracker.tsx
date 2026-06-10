@@ -173,7 +173,7 @@ export default function ShuttleTracker() {
       {/* Live module overlaps the hero seam (book: Overlap elements to create layers) */}
       <div className="mx-auto -mt-24 max-w-4xl overflow-hidden rounded-3xl bg-white shadow-[var(--shadow-elevated)] dark:bg-evergreen-900 lg:-mt-32">
         <div className="h-1 w-full bg-gradient-to-r from-sunrise-500/0 via-sunrise-500 to-sunrise-500/0" />
-        <h2 id="tracker-heading" className="sr-only">Where's the shuttle right now?</h2>
+        <h2 id="tracker-heading" className="sr-only">Where&apos;s the shuttle right now?</h2>
         {/* Header strip */}
         <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
           <div>

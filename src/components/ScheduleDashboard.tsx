@@ -3,6 +3,7 @@ import ScheduleInteractive from '@/components/ScheduleInteractive';
 import ServiceCards from '@/components/ServiceCards';
 import { getActiveFares } from '@/lib/fares-db';
 import { isSaleActive, type FareDTO } from '@/lib/fares';
+import { requestNowMs } from '@/lib/utils';
 
 // Pricing shown on the marketing cards comes from the DB catalog so admin price/sale
 // edits flow through. Each card maps to a representative fare id.
@@ -17,7 +18,7 @@ function priceProps(fare: FareDTO | undefined, nowMs: number): { priceCents: num
 export default async function ScheduleDashboard() {
   const fares = await getActiveFares().catch(() => [] as FareDTO[]);
   const byId = new Map(fares.map((f) => [f.id, f]));
-  const nowMs = Date.now();
+  const nowMs = requestNowMs();
 
   return (
     <section id="schedule" className="mx-auto max-w-7xl px-6 py-24">

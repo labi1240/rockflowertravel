@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import type { StripeElementsOptions } from '@stripe/stripe-js';
 import { motion, AnimatePresence } from 'motion/react';
@@ -1154,9 +1155,9 @@ function PaymentForm({
       <p className="text-xs leading-relaxed text-mist-500">
         By providing your card information, you allow RockFlower Travels Inc. to charge your card
         for this booking and any related fees in accordance with our{' '}
-        <a href="/privacy-policy" className="font-semibold text-evergreen-700 underline-offset-2 hover:underline">
+        <Link href="/privacy-policy" className="font-semibold text-evergreen-700 underline-offset-2 hover:underline">
           privacy policy
-        </a>{' '}
+        </Link>{' '}
         and terms.
       </p>
 
