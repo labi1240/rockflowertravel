@@ -1,6 +1,27 @@
 # RockFlower Travels — Progress Report
 
-_Last updated: 2026-06-07_
+_Last updated: 2026-06-10_
+
+## ✅ Shipped (update 3): Lint repair + code-health pass (2026-06-10)
+
+`pnpm lint` had been silently broken (config imported the uninstalled
+`@eslint/eslintrc`; `eslint-config-next` 16 is flat-config-native anyway).
+Rewrote `eslint.config.mjs` in flat style, excluded the legacy `shuttle_service/`
+tree, and fixed every error the working linter surfaced:
+
+- `Date.now()` in async server components → `requestNowMs()` helper in
+  `src/lib/utils.ts` (request-time reads are intentional there; the purity rule
+  can't tell server from client components).
+- `LightRays` now uses a deterministic seeded PRNG computed during render —
+  hydration-safe with no setState-in-effect, and no flash of empty rays on mount.
+- `RouteMapInteractive`: `isVisible` wrapped in `useCallback`, stale deps and
+  dead eslint directives removed.
+- `<a>` → `next/link` in `BookingModal` + admin `DashboardKPIs`.
+- Deleted the Payload blank-template example endpoint `/my-route`.
+- Updated the stale blank-template e2e homepage test to assert the real site.
+- Migration files' template-generated unused args are lint-exempted.
+
+`pnpm build`, `pnpm exec tsc --noEmit`, and `pnpm lint` all pass (0 errors).
 
 ## ✅ Shipped (update 2): Route-page redesign + image hosting + URL consolidation
 
@@ -94,16 +115,16 @@ SEO page per experience, priced live from that route's fares.
 
 ## ⚠️ Known data note
 
-- A fare `banff-canmore` (label "Banff", $64.99) is linked to the `sunrise-express`
-  route in the DB, so it currently shows as a third "Choose your trip" option on the
-  demo page. Relink or rename it in admin if unintended.
+- ~~A fare `banff-canmore` (label "Banff", $64.99) is linked to the `sunrise-express`
+  route~~ **Fixed 2026-06-10:** the fare's route link was nulled out; the demo
+  `canmore-express` route + fares were hard-deleted from the DB.
 
 ## 📋 Pending / next ideas
 
 - [ ] Seed landing content for the **daytime** and **evening** routes.
-- [ ] Optional: 301-redirect old `/routes/[fareSlug]` pages to the pretty landing URLs.
-- [ ] Set `metadataBase` in the root layout (build warns; OG/Twitter image URLs
-      currently resolve against `http://localhost:3000`). Drive it off `NEXT_PUBLIC_SITE_URL`.
+- [x] 301-redirect old `/routes/[fareSlug]` pages to the pretty landing URLs
+      (`permanentRedirect` → 308 when a published landing exists).
+- [x] Set `metadataBase` in the root layout (done — driven off `SITE.url`).
 - [ ] Replace placeholder testimonials/photos with real assets per route.
 - [ ] Consider a global "Policies" FAQ block source so policy answers stay consistent
       across pages (the legacy `src/components/Faq.tsx` still has TODO policy items).

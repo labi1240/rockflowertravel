@@ -138,7 +138,7 @@ export default function ScheduleInteractive() {
         {activeTab === 'daytime' && (
           <DaytimePanel
             circuits={daytimeCircuits}
-            onBook={handleBook('banff-ll-moraine')}
+            onBook={handleBook('daytime-samson-ll')}
           />
         )}
         {activeTab === 'evening' && (

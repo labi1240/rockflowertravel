@@ -6,7 +6,7 @@ import type { FareId } from '@/lib/fares';
 // of `BookingRouteId` keep working.
 export type BookingRouteId = FareId;
 
-const DEFAULT_FARE: FareId = 'banff-ll-moraine';
+const DEFAULT_FARE: FareId = 'daytime-samson-ll';
 
 interface BookingModalOpenOptions {
   date?: string;

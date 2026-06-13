@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getActiveFares } from '@/lib/fares-db'
 import { isSaleActive, formatCents, type FareDTO } from '@/lib/fares'
 import ServiceBookButton from '@/components/ServiceBookButton'
+import { requestNowMs } from '@/lib/utils'
 
 const TIER_LABEL: Record<string, string> = {
   sunrise: 'Sunrise',
@@ -24,7 +25,7 @@ export default async function AllFares() {
   }
   if (fares.length === 0) return null
 
-  const nowMs = Date.now()
+  const nowMs = requestNowMs()
 
   return (
     <section id="routes" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">

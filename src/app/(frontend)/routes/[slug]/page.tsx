@@ -11,6 +11,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { getFareBySlug } from '@/lib/fares-db'
 import { quote, formatCents, type FareDTO } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
+import { requestNowMs } from '@/lib/utils'
 import type { Route, ScheduleTemplate, Stop } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -95,7 +96,7 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ sl
     permanentRedirect(`/${route.seoSlug}`)
   }
 
-  const q = quote(fare, 1, Date.now())
+  const q = quote(fare, 1, requestNowMs())
   const bookableLegs = templates.flatMap((t) =>
     (t.legs ?? []).filter((l) => l.bookable).map((l) => ({ template: t.label, ...l })),
   )

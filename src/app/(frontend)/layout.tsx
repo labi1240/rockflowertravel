@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Outfit, Plus_Jakarta_Sans, Geist } from 'next/font/google'
 import React from 'react'
 import './globals.css'
-import { cn } from '@/lib/utils'
+import { cn, requestNowMs } from '@/lib/utils'
 import { FaresProvider } from '@/components/FaresProvider'
 import { getActiveFares } from '@/lib/fares-db'
 import type { FareDTO } from '@/lib/fares'
@@ -86,7 +86,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
   } catch (err) {
     console.error('[FrontendLayout] failed to load fares', err)
   }
-  const nowMs = Date.now()
+  const nowMs = requestNowMs()
 
   return (
     <html lang="en" className={cn(outfit.variable, plusJakarta.variable, 'font-sans', geist.variable)}>

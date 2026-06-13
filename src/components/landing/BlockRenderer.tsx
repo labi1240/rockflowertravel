@@ -17,20 +17,39 @@ import {
 type Block = NonNullable<Route['layout']>[number]
 
 /**
+ * Block types that read as "tour detail" text and render well in the narrow
+ * content rail beside the sticky booking card. Everything else (immersive
+ * full-bleed bands: feature grid, gallery, route map, things-to-do,
+ * testimonials, CTA) stays full-width below. The landing page partitions
+ * `layout` on this set; here it only decides which sections accept `bare`.
+ */
+export const RAIL_BLOCK_TYPES = new Set<Block['blockType']>([
+  'highlights',
+  'inclusions',
+  'itinerary',
+  'faq',
+  'richText',
+])
+
+/**
  * Renders an admin-authored landing `layout` array to React, in order. Each
  * block's `blockType` selects its section component. `fareId` is the page's
- * default bookable fare, threaded to blocks with a booking CTA.
+ * default bookable fare, threaded to blocks with a booking CTA. When `bare` is
+ * set the rail-eligible sections drop their full-width band so they sit inside
+ * the content rail.
  */
 export default function BlockRenderer({
   blocks,
   fareId,
   ratingValue,
   ratingCount,
+  bare = false,
 }: {
   blocks?: Block[] | null
   fareId: BookingRouteId | null
   ratingValue?: number | null
   ratingCount?: number | null
+  bare?: boolean
 }) {
   if (!blocks?.length) return null
   return (
@@ -39,13 +58,13 @@ export default function BlockRenderer({
         const key = block.id ?? `${block.blockType}`
         switch (block.blockType) {
           case 'highlights':
-            return <HighlightsSection key={key} block={block} />
+            return <HighlightsSection key={key} block={block} bare={bare} />
           case 'featureGrid':
             return <FeatureGridSection key={key} block={block} />
           case 'inclusions':
-            return <InclusionsSection key={key} block={block} />
+            return <InclusionsSection key={key} block={block} bare={bare} />
           case 'itinerary':
-            return <ItinerarySection key={key} block={block} />
+            return <ItinerarySection key={key} block={block} bare={bare} />
           case 'routeMap':
             return <RouteMapSection key={key} block={block} />
           case 'gallery':
@@ -55,9 +74,9 @@ export default function BlockRenderer({
           case 'testimonials':
             return <TestimonialsSection key={key} block={block} ratingValue={ratingValue} ratingCount={ratingCount} />
           case 'faq':
-            return <FaqSection key={key} block={block} />
+            return <FaqSection key={key} block={block} bare={bare} />
           case 'richText':
-            return <RichTextSection key={key} block={block} />
+            return <RichTextSection key={key} block={block} bare={bare} />
           case 'cta':
             return <CtaSection key={key} block={block} fareId={fareId} />
           default:
