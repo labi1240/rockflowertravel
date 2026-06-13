@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { uploadthingStorage } from '@payloadcms/storage-uploadthing'
 import path from 'path'
@@ -23,6 +24,8 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  // Used to build absolute links in transactional email (e.g. password-reset).
+  serverURL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   admin: {
     user: Users.slug,
     importMap: {
@@ -55,6 +58,23 @@ export default buildConfig({
     Media,
   ],
   editor: lexicalEditor(),
+  // Transactional email (forgot-password, verification, etc.).
+  // Uses Mailtrap SMTP when configured; otherwise Payload logs emails to the console.
+  email: process.env.MAILTRAP_HOST
+    ? nodemailerAdapter({
+        defaultFromName: 'RockFlower Travels',
+        defaultFromAddress:
+          process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'hello@rockflowertravels.ca',
+        transportOptions: {
+          host: process.env.MAILTRAP_HOST,
+          port: Number(process.env.MAILTRAP_PORT) || 2525,
+          auth: {
+            user: process.env.MAILTRAP_USER,
+            pass: process.env.MAILTRAP_PASS,
+          },
+        },
+      })
+    : undefined,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
