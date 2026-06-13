@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import type { StripeElementsOptions } from '@stripe/stripe-js';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,10 +35,9 @@ const DAYTIME_TIMES: { value: string; label: string }[] = [
 
 const TIME_OPTIONS: Record<FareId, { value: string; label: string }[]> = {
   'sunrise-banff-moraine': [{ value: '4:30 AM', label: '4:30 AM — Banff → Moraine Lake' }],
-  'sunrise-banff-ll':      [{ value: '4:30 AM', label: '4:30 AM — Banff → Lake Louise' }],
-  'banff-ll':         DAYTIME_TIMES,
-  'banff-ll-moraine': DAYTIME_TIMES,
-  'll-moraine':       DAYTIME_TIMES,
+  'daytime-samson-ll':     DAYTIME_TIMES,
+  'daytime-ll-moraine':    DAYTIME_TIMES,
+  'daytime-moraine-samson': DAYTIME_TIMES,
   'evening-ll-banff': [{ value: '6:00 PM', label: '6:00 PM — Lake Louise → Banff' }],
 };
 
@@ -51,7 +51,7 @@ export default function BookingModal() {
   const closeModal = useBookingModal((s) => s.close);
 
   const [step, setStep] = useState<Step>(1);
-  const [route, setRoute] = useState<FareId>('banff-ll-moraine');
+  const [route, setRoute] = useState<FareId>('daytime-samson-ll');
   const [time, setTime] = useState<string>('');
   const [date, setDate] = useState<string>('2026-05-21');
   const [passengers, setPassengers] = useState<number>(1);
@@ -1154,9 +1154,9 @@ function PaymentForm({
       <p className="text-xs leading-relaxed text-mist-500">
         By providing your card information, you allow RockFlower Travels Inc. to charge your card
         for this booking and any related fees in accordance with our{' '}
-        <a href="/privacy-policy" className="font-semibold text-evergreen-700 underline-offset-2 hover:underline">
+        <Link href="/privacy-policy" className="font-semibold text-evergreen-700 underline-offset-2 hover:underline">
           privacy policy
-        </a>{' '}
+        </Link>{' '}
         and terms.
       </p>
 

@@ -59,3 +59,7 @@ node_modules/
 /RockFlower_Daily_Shuttle_Schedule.pdf
 /scrnli_*.png
 /screencapture-*.png
+
+# claude-mem per-directory context stubs (auto-generated; root CLAUDE.md stays tracked)
+docs/CLAUDE.md
+src/**/CLAUDE.md

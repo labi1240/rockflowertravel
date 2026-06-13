@@ -37,8 +37,17 @@ async function run() {
       continue
     }
     if (route.heroImage) {
-      log(`route already has hero image, skipping: ${slug}`)
-      continue
+      const oldMediaId = typeof route.heroImage === 'object' ? (route.heroImage as any).id : route.heroImage
+      log(`route already has hero image ${oldMediaId}, deleting old media record to re-upload: ${slug}`)
+      try {
+        await payload.delete({
+          collection: 'media',
+          id: oldMediaId,
+          overrideAccess: true,
+        })
+      } catch (e) {
+        log(`note: could not delete old media record (might have already been deleted)`)
+      }
     }
 
     const media = await payload.create({
