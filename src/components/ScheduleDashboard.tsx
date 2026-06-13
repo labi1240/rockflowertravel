@@ -48,25 +48,25 @@ export default async function ScheduleDashboard() {
 
         <ul className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <PriceCard
-            eyebrow="Daytime · from Banff"
-            title="Banff → Lake Louise"
-            {...priceProps(byId.get('banff-ll'), nowMs)}
-            description="One-way daytime seat from Banff to Lake Louise. Add Moraine Lake for $89.99."
-            note="Banff → Both Lakes $89.99 + $5 toll"
+            eyebrow="Daytime · standard loop"
+            title="Samson Mall → Lake Louise"
+            {...priceProps(byId.get('daytime-samson-ll'), nowMs)}
+            description="One-way daytime seat from Samson Mall (Village) to Lake Louise Lakeshore."
+            note="Connect to the lakeshore trails"
           />
           <PriceCard
             eyebrow="Most popular"
-            title="Lake Louise ⇄ Moraine"
-            {...priceProps(byId.get('ll-moraine'), nowMs)}
-            description="Direct shuttle between Lake Louise and Moraine Lake — one ticket covers both directions."
-            note="Round trip — there and back"
+            title="Lake Louise → Moraine Lake"
+            {...priceProps(byId.get('daytime-ll-moraine'), nowMs)}
+            description="Direct daytime shuttle segment from Lake Louise Lakeshore up to Moraine Lake."
+            note="Access the Valley of the Ten Peaks"
             accent
           />
           <PriceCard
             eyebrow="Premium · Sunrise"
             title="Sunrise Express"
-            {...priceProps(byId.get('sunrise-banff-ll'), nowMs)}
-            description="Premium 4:30 AM departure from Banff. Banff → Lake Louise $79.99, Banff → Moraine Lake $99.98."
+            {...priceProps(byId.get('sunrise-banff-moraine'), nowMs)}
+            description="Premium 4:30 AM departure from Banff direct to Moraine Lake. Beat the vehicle ban and watch the sunrise."
             note="Beat the crowds at first light"
             primary
           />

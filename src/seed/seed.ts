@@ -31,11 +31,10 @@ const ROUTES = [
 
 const FARES = [
   { slug: 'sunrise-banff-moraine', tier: 'sunrise', routeKind: 'SUNRISE_EXPRESS', routeSlug: 'sunrise-express', label: 'Banff → Moraine Lake (Sunrise Express)', short: 'Sunrise · Banff → Moraine', origin: 'Banff', destination: 'Moraine Lake', priceCents: 9998, tollCents: 0, roundTrip: false, premium: true, defaultTime: '4:30 AM', note: 'Premium direct departure — first light at Moraine Lake.', sortOrder: 1 },
-  { slug: 'sunrise-banff-ll', tier: 'sunrise', routeKind: 'SUNRISE_EXPRESS', routeSlug: 'sunrise-express', label: 'Banff → Lake Louise (Sunrise Express)', short: 'Sunrise · Banff → Lake Louise', origin: 'Banff', destination: 'Lake Louise', priceCents: 7999, tollCents: 0, roundTrip: false, premium: true, defaultTime: '4:30 AM', note: 'Premium early departure to Lake Louise.', sortOrder: 2 },
-  { slug: 'banff-ll', tier: 'daytime', routeKind: 'DAYTIME_CIRCUIT', routeSlug: 'daytime-circuit', label: 'Banff → Lake Louise', short: 'Banff → Lake Louise', origin: 'Banff', destination: 'Lake Louise', priceCents: 6599, tollCents: 0, roundTrip: false, premium: false, defaultTime: '7:00 AM', note: null, sortOrder: 3 },
-  { slug: 'banff-ll-moraine', tier: 'daytime', routeKind: 'DAYTIME_CIRCUIT', routeSlug: 'daytime-circuit', label: 'Banff → Lake Louise + Moraine Lake', short: 'Banff → Both Lakes', origin: 'Banff', destination: 'Lake Louise & Moraine Lake', priceCents: 8999, tollCents: 500, roundTrip: false, premium: false, defaultTime: '7:00 AM', note: 'Visits both lakes. +$5 Moraine Lake toll per guest, plus GST.', sortOrder: 4 },
-  { slug: 'll-moraine', tier: 'daytime', routeKind: 'DAYTIME_CIRCUIT', routeSlug: 'daytime-circuit', label: 'Lake Louise ⇄ Moraine Lake (round trip)', short: 'Lake Louise ⇄ Moraine', origin: 'Lake Louise', destination: 'Moraine Lake', priceCents: 8999, tollCents: 0, roundTrip: true, premium: false, defaultTime: '7:00 AM', note: 'Direct shuttle — one ticket covers both directions (there and back).', sortOrder: 5 },
-  { slug: 'evening-ll-banff', tier: 'evening', routeKind: 'EVENING_RETURN', routeSlug: 'evening-return', label: 'Lake Louise → Banff (Evening Return)', short: 'Evening · Lake Louise → Banff', origin: 'Lake Louise', destination: 'Banff', priceCents: 6599, tollCents: 0, roundTrip: false, premium: false, defaultTime: '6:00 PM', note: 'End-of-day transfer back to Banff.', sortOrder: 6 },
+  { slug: 'daytime-samson-ll', tier: 'daytime', routeKind: 'DAYTIME_CIRCUIT', routeSlug: 'daytime-circuit', label: 'Samson Mall → Lake Louise Lakeshore', short: 'Samson Mall → Lake Louise', origin: 'Samson Mall', destination: 'Lake Louise Lakeshore', priceCents: 6599, tollCents: 0, roundTrip: false, premium: false, defaultTime: '7:00 AM', note: 'Direct daytime connection from Samson Mall to the lakeshore.', sortOrder: 2 },
+  { slug: 'daytime-ll-moraine', tier: 'daytime', routeKind: 'DAYTIME_CIRCUIT', routeSlug: 'daytime-circuit', label: 'Lake Louise Lakeshore → Moraine Lake', short: 'Lake Louise → Moraine', origin: 'Lake Louise Lakeshore', destination: 'Moraine Lake', priceCents: 8999, tollCents: 0, roundTrip: false, premium: false, defaultTime: '7:15 AM', note: 'Daytime shuttle connecting Lake Louise and Moraine Lake.', sortOrder: 3 },
+  { slug: 'daytime-moraine-samson', tier: 'daytime', routeKind: 'DAYTIME_CIRCUIT', routeSlug: 'daytime-circuit', label: 'Moraine Lake → Samson Mall', short: 'Moraine → Samson Mall', origin: 'Moraine Lake', destination: 'Samson Mall', priceCents: 6599, tollCents: 0, roundTrip: false, premium: false, defaultTime: '7:40 AM', note: 'Daytime transfer from Moraine Lake back to Samson Mall.', sortOrder: 4 },
+  { slug: 'evening-ll-banff', tier: 'evening', routeKind: 'EVENING_RETURN', routeSlug: 'evening-return', label: 'Lake Louise → Banff (Evening Return)', short: 'Evening · Lake Louise → Banff', origin: 'Lake Louise', destination: 'Banff', priceCents: 6599, tollCents: 0, roundTrip: false, premium: false, defaultTime: '6:00 PM', note: 'End-of-day transfer back to Banff.', sortOrder: 5 },
 ] as const
 
 type LegInput = { sequence: number; from: string; to: string; departMin: number; arriveMin: number; bookable: boolean; priceCents: number }
@@ -181,6 +180,24 @@ export async function seed(payload: Payload): Promise<void> {
     })
   }
   log(`fares: ${FARES.length}`)
+
+  // ── Clean up inactive / removed fares from DB ─────────────────────────────
+  const seededFareSlugs: string[] = FARES.map((f) => f.slug) as string[]
+  const { docs: allDbFares } = await payload.find({
+    collection: 'fares',
+    limit: 100,
+    overrideAccess: true,
+  })
+  for (const dbFare of allDbFares) {
+    if (typeof dbFare.slug === 'string' && !seededFareSlugs.includes(dbFare.slug)) {
+      payload.logger.info(`[seed] deleting obsolete fare: ${dbFare.slug}`)
+      await payload.delete({
+        collection: 'fares',
+        id: dbFare.id,
+        overrideAccess: true,
+      })
+    }
+  }
 
   // ── Bootstrap admin ──────────────────────────────────────────────────────
   const adminEmail = process.env.SEED_ADMIN_EMAIL || 'lovepreetgill1238@gmail.com'

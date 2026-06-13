@@ -35,10 +35,9 @@ const DAYTIME_TIMES: { value: string; label: string }[] = [
 
 const TIME_OPTIONS: Record<FareId, { value: string; label: string }[]> = {
   'sunrise-banff-moraine': [{ value: '4:30 AM', label: '4:30 AM — Banff → Moraine Lake' }],
-  'sunrise-banff-ll':      [{ value: '4:30 AM', label: '4:30 AM — Banff → Lake Louise' }],
-  'banff-ll':         DAYTIME_TIMES,
-  'banff-ll-moraine': DAYTIME_TIMES,
-  'll-moraine':       DAYTIME_TIMES,
+  'daytime-samson-ll':     DAYTIME_TIMES,
+  'daytime-ll-moraine':    DAYTIME_TIMES,
+  'daytime-moraine-samson': DAYTIME_TIMES,
   'evening-ll-banff': [{ value: '6:00 PM', label: '6:00 PM — Lake Louise → Banff' }],
 };
 
@@ -52,7 +51,7 @@ export default function BookingModal() {
   const closeModal = useBookingModal((s) => s.close);
 
   const [step, setStep] = useState<Step>(1);
-  const [route, setRoute] = useState<FareId>('banff-ll-moraine');
+  const [route, setRoute] = useState<FareId>('daytime-samson-ll');
   const [time, setTime] = useState<string>('');
   const [date, setDate] = useState<string>('2026-05-21');
   const [passengers, setPassengers] = useState<number>(1);
