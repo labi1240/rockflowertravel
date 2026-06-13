@@ -11,7 +11,22 @@ import {
   REST_PUT,
 } from '@payloadcms/next/routes'
 
-export const GET = REST_GET(config)
+const originalGet = REST_GET(config)
+
+export const GET = originalGet
+
+export const HEAD = async (request: Request, context: any) => {
+  const getRequest = new Request(request.url, {
+    method: 'GET',
+    headers: request.headers,
+    cache: request.cache,
+    credentials: request.credentials,
+    mode: request.mode,
+    redirect: request.redirect,
+    referrer: request.referrer,
+  })
+  return originalGet(getRequest, context)
+}
 export const POST = REST_POST(config)
 export const DELETE = REST_DELETE(config)
 export const PATCH = REST_PATCH(config)

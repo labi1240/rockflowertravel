@@ -72,7 +72,11 @@ export default buildConfig({
     // Persist Media uploads on UploadThing (Vercel's filesystem is ephemeral —
     // local-disk uploads 404 in production). Token from env UPLOADTHING_TOKEN.
     uploadthingStorage({
-      collections: { media: true },
+      // Serve media directly from the UploadThing CDN instead of proxying through
+      // /api/media/file/*. The proxy declares Content-Length: 0 (UploadThing's CDN
+      // omits content-length on HEAD), which Vercel enforces — images arrive empty
+      // in production. Direct CDN URLs sidestep that and skip a function invocation.
+      collections: { media: { disablePayloadAccessControl: true } },
       options: { token: process.env.UPLOADTHING_TOKEN, acl: 'public-read' },
     }),
   ],
