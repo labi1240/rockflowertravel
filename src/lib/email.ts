@@ -63,3 +63,79 @@ export async function sendBookingConfirmation(b: ConfirmationData): Promise<void
     console.error('[email] confirmation send failed', err)
   }
 }
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+const messageCardHtml = (heading: string, lead: string, body: string, ctaUrl: string, ctaLabel: string) => `
+  <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#211b16">
+    <h1 style="font-size:20px;color:#114b3b;margin:0 0 4px">${heading}</h1>
+    <p style="color:#6b5d50;margin:0 0 16px">${lead}</p>
+    <blockquote style="margin:0 0 20px;padding:14px 16px;background:#fff;border:1px solid #e7e0d6;border-left:3px solid #e8a13a;border-radius:8px;white-space:pre-wrap;color:#211b16">${escapeHtml(body)}</blockquote>
+    <a href="${ctaUrl}" style="display:inline-block;background:#e8a13a;color:#0f2a20;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px">${ctaLabel} →</a>
+  </div>`
+
+/** Notify the support inbox that a customer sent a message. Fault-tolerant: never throws. */
+export async function notifyStaffOfMessage(m: {
+  reference: string | null
+  bookingId: number | string | null
+  body: string
+}): Promise<void> {
+  const key = process.env.RESEND_API_KEY
+  const to = process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM
+  if (!key || !to) {
+    console.warn('[email] RESEND_API_KEY or SUPPORT_EMAIL not set — skipping support notification')
+    return
+  }
+  const ref = m.reference ? ` (${m.reference})` : ''
+  const adminUrl = m.bookingId != null ? absoluteUrl(`/admin/collections/bookings/${m.bookingId}`) : absoluteUrl('/admin')
+  const html = messageCardHtml(
+    'New customer message',
+    `A rider sent a message about booking${ref}.`,
+    m.body,
+    adminUrl,
+    'Open booking in admin',
+  )
+  try {
+    await new Resend(key).emails.send({
+      from: FROM,
+      to,
+      subject: `New message${ref ? ' re ' + m.reference : ''} — ${SITE.name}`,
+      html,
+    })
+  } catch (err) {
+    console.error('[email] support notification failed', err)
+  }
+}
+
+/** Notify a customer that staff replied to their thread. Fault-tolerant: never throws. */
+export async function notifyCustomerOfReply(m: {
+  email: string
+  reference: string | null
+  body: string
+}): Promise<void> {
+  const key = process.env.RESEND_API_KEY
+  if (!key) {
+    console.warn('[email] RESEND_API_KEY not set — skipping reply notification')
+    return
+  }
+  if (!m.email) return
+  const tripUrl = m.reference ? absoluteUrl(`/my-trips/${m.reference}`) : absoluteUrl('/my-trips')
+  const html = messageCardHtml(
+    `You have a reply from ${SITE.name}`,
+    'Our team replied to your message:',
+    m.body,
+    tripUrl,
+    'View the conversation',
+  )
+  try {
+    await new Resend(key).emails.send({
+      from: FROM,
+      to: m.email,
+      subject: `Reply from ${SITE.name}${m.reference ? ' — booking ' + m.reference : ''}`,
+      html,
+    })
+  } catch (err) {
+    console.error('[email] reply notification failed', err)
+  }
+}

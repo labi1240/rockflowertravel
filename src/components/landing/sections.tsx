@@ -171,8 +171,8 @@ export function RouteMapSection({ block }: { block: RouteMapBlock }) {
     <section className="py-12">
       <Container>
         <SectionHeading heading={block.heading} subheading={block.subheading} />
+        <RouteMapInteractive />
       </Container>
-      <RouteMapInteractive />
     </section>
   )
 }

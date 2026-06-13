@@ -57,6 +57,24 @@ export default async function MyTripsPage() {
     overrideAccess: true,
   })
 
+  // Unread staff replies, counted per booking, for the dashboard badges.
+  const { docs: unreadMsgs } = await payload.find({
+    collection: 'messages',
+    where: {
+      customer: { equals: customer.id },
+      sender: { equals: 'staff' },
+      readByCustomerAt: { equals: null },
+    },
+    limit: 500,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const unreadByBooking: Record<number, number> = {}
+  for (const m of unreadMsgs) {
+    const id = typeof m.booking === 'object' && m.booking ? m.booking.id : (m.booking as number)
+    if (id != null) unreadByBooking[id] = (unreadByBooking[id] ?? 0) + 1
+  }
+
   const todayISO = edmontonTodayISO()
   const isUpcoming = (b: Booking) =>
     !!b.serviceDate &&
@@ -85,8 +103,8 @@ export default async function MyTripsPage() {
             <EmptyState />
           ) : (
             <div className="space-y-12">
-              <BookingList title="Upcoming" emptyHint="No upcoming rides booked." bookings={upcoming} />
-              <BookingList title="Past & cancelled" emptyHint="Nothing in your history yet." bookings={past} muted />
+              <BookingList title="Upcoming" emptyHint="No upcoming rides booked." bookings={upcoming} unreadByBooking={unreadByBooking} />
+              <BookingList title="Past & cancelled" emptyHint="Nothing in your history yet." bookings={past} unreadByBooking={unreadByBooking} muted />
             </div>
           )}
         </section>
@@ -101,11 +119,13 @@ function BookingList({
   title,
   emptyHint,
   bookings,
+  unreadByBooking,
   muted = false,
 }: {
   title: string
   emptyHint: string
   bookings: Booking[]
+  unreadByBooking: Record<number, number>
   muted?: boolean
 }) {
   return (
@@ -120,6 +140,7 @@ function BookingList({
           {bookings.map((b) => {
             const status = STATUS_DISPLAY[b.status] ?? STATUS_DISPLAY.PENDING_PAYMENT
             const routeTone = b.routeKind ? ROUTE_TONE[b.routeKind] : undefined
+            const unread = unreadByBooking[b.id] ?? 0
             return (
               <li key={b.reference}>
                 <Link
@@ -134,6 +155,11 @@ function BookingList({
                         </span>
                       )}
                       <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${status.tone}`}>{status.label}</span>
+                      {unread > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sunrise-500 px-2.5 py-1 text-xs font-semibold text-evergreen-950">
+                          {unread} new {unread === 1 ? 'reply' : 'replies'}
+                        </span>
+                      )}
                     </div>
                     <p className="font-display text-lg font-semibold text-mist-900">
                       {formatDate(b.serviceDate)}
