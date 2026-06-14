@@ -19,6 +19,15 @@ export type FareTier = 'sunrise' | 'daytime' | 'evening'
 
 export const GST_RATE = 0.05
 
+// An optional extra a rider can toggle on at booking (e.g. "Add Moraine Lake stop").
+// Priced per passenger, pre-GST — taxed the same as the base fare and toll.
+export interface FareAddOn {
+  key: string // stable id, unique within a fare
+  label: string
+  description: string | null
+  priceCents: number // per passenger, pre-GST
+}
+
 // Serializable fare shape passed from server → client. Sale window is epoch-ms so it
 // crosses the RSC boundary cleanly and compares without Date parsing.
 export interface FareDTO {
@@ -32,6 +41,7 @@ export interface FareDTO {
   destination: string
   priceCents: number // base fare per seat, pre-toll, pre-GST
   tollCents: number // toll per passenger, pre-GST
+  addOns: FareAddOn[] // optional per-passenger extras the rider can select
   roundTrip: boolean
   premium: boolean
   defaultTime: string
@@ -48,6 +58,7 @@ export interface FareDTO {
 export interface FarePricing {
   priceCents: number
   tollCents: number
+  addOns?: FareAddOn[]
   salePriceCents: number | null
   saleStartsMs: number | null
   saleEndsMs: number | null
@@ -75,19 +86,41 @@ export interface Quote {
   onSale: boolean
   fareCents: number // effective unit × passengers
   tollCents: number // toll × passengers
-  subtotalCents: number // fare + toll (taxable base)
+  addOnCents: number // selected add-ons × passengers
+  selectedAddOns: FareAddOn[] // resolved add-ons (for line-item display)
+  subtotalCents: number // fare + toll + add-ons (taxable base)
   gstCents: number // 5% GST on subtotal
   totalCents: number // grand total
 }
 
+/**
+ * Resolves the selected add-on keys to the fare's active add-on definitions, dropping
+ * any unknown key. The single source of truth for which extras a quote actually charges —
+ * both client preview and server checkout pass selections through here.
+ */
+export function resolveAddOns(fare: FarePricing, selectedKeys: readonly string[]): FareAddOn[] {
+  if (!selectedKeys.length || !fare.addOns?.length) return []
+  const wanted = new Set(selectedKeys)
+  return fare.addOns.filter((a) => wanted.has(a.key))
+}
+
 // Server-authoritative AND client-preview pricing. Single implementation over a
 // FareDTO so server and client always agree. `nowMs` makes sale evaluation explicit.
-export function quote(fare: FarePricing, passengers: number, nowMs: number): Quote {
+// `selectedAddOnKeys` toggles optional per-passenger extras into the taxable subtotal.
+export function quote(
+  fare: FarePricing,
+  passengers: number,
+  nowMs: number,
+  selectedAddOnKeys: readonly string[] = [],
+): Quote {
   const onSale = isSaleActive(fare, nowMs)
   const unitPriceCents = onSale ? (fare.salePriceCents as number) : fare.priceCents
   const fareCents = unitPriceCents * passengers
   const tollCents = fare.tollCents * passengers
-  const subtotalCents = fareCents + tollCents
+  const selectedAddOns = resolveAddOns(fare, selectedAddOnKeys)
+  const addOnUnitCents = selectedAddOns.reduce((sum, a) => sum + a.priceCents, 0)
+  const addOnCents = addOnUnitCents * passengers
+  const subtotalCents = fareCents + tollCents + addOnCents
   const gstCents = Math.round(subtotalCents * GST_RATE)
   return {
     unitPriceCents,
@@ -95,6 +128,8 @@ export function quote(fare: FarePricing, passengers: number, nowMs: number): Quo
     onSale,
     fareCents,
     tollCents,
+    addOnCents,
+    selectedAddOns,
     subtotalCents,
     gstCents,
     totalCents: subtotalCents + gstCents,

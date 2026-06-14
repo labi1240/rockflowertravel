@@ -25,6 +25,7 @@ const InputSchema = z.object({
   name: z.string().trim().min(1).max(120),
   email: z.string().email(),
   phone: z.string().min(5).max(40),
+  selectedAddOns: z.array(z.string().min(1)).max(20).optional().default([]),
 })
 
 function generateReference(): string {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', issues: parsed.error.issues }, { status: 400 })
     }
-    const { route, date, time, passengers, name, email, phone } = parsed.data
+    const { route, date, time, passengers, name, email, phone, selectedAddOns } = parsed.data
 
     const payload = await getPayloadClient()
 
@@ -56,7 +57,10 @@ export async function POST(req: NextRequest) {
     if (!fare || !fare.active) {
       return NextResponse.json({ error: 'Invalid route' }, { status: 400 })
     }
-    const { subtotalCents, gstCents, totalCents } = quote(fare, passengers, Date.now())
+    // quote() drops any add-on key not on the fare; `selectedAddOns` on the quote is the
+    // authoritative resolved list we charge and snapshot (never trust client prices).
+    const q = quote(fare, passengers, Date.now(), selectedAddOns)
+    const { subtotalCents, gstCents, totalCents } = q
 
     // Route snapshot (enum-independent).
     const routeKindValue = fare.routeKind && ROUTE_KINDS.has(fare.routeKind) ? fare.routeKind : null
@@ -124,6 +128,7 @@ export async function POST(req: NextRequest) {
           routeSlug: routeSlug ?? undefined,
           serviceDate: new Date(`${date}T00:00:00.000Z`).toISOString(),
           departureTime: time,
+          addOns: q.selectedAddOns.map((a) => ({ key: a.key, label: a.label, priceCents: a.priceCents })),
           guestEmail: email,
           guestFirstName: firstName,
           guestLastName: lastName,
@@ -169,6 +174,7 @@ export async function POST(req: NextRequest) {
         date,
         time,
         passengers: String(passengers),
+        ...(q.selectedAddOns.length ? { addOns: q.selectedAddOns.map((a) => a.key).join(',') } : {}),
       },
     })
 

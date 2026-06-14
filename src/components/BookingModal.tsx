@@ -17,6 +17,7 @@ import {
   effectiveUnitPrice,
   quote,
   type FareId,
+  type FareAddOn,
 } from '@/lib/fares';
 import { useFares } from '@/components/FaresProvider';
 
@@ -55,6 +56,7 @@ export default function BookingModal() {
   const [time, setTime] = useState<string>('');
   const [date, setDate] = useState<string>('2026-05-21');
   const [passengers, setPassengers] = useState<number>(1);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
@@ -75,6 +77,7 @@ export default function BookingModal() {
     if (initialFare) {
       setRoute(initialRoute);
       setTime(initialFare.defaultTime);
+      setSelectedAddOns([]);
     }
     if (initialDate) setDate(initialDate);
     if (typeof initialPassengers === 'number' && initialPassengers >= 1 && initialPassengers <= 8) {
@@ -96,9 +99,10 @@ export default function BookingModal() {
   // Resolve the selected fare from the DB-backed catalog, falling back to the first fare
   // if the stored id is missing (e.g. a deactivated/removed fare).
   const fare = getFare(route) ?? fares[0];
-  const q = fare ? quote(fare, passengers, nowMs) : null;
+  const q = fare ? quote(fare, passengers, nowMs, selectedAddOns) : null;
   const fareSubtotal = (q?.fareCents ?? 0) / 100; // effective fare × passengers
   const toll = (q?.tollCents ?? 0) / 100; // Moraine toll × passengers
+  const addOnLines = q?.selectedAddOns ?? []; // resolved, charge-authoritative add-ons
   const tax = (q?.gstCents ?? 0) / 100;
   const total = (q?.totalCents ?? 0) / 100;
   const onSale = q?.onSale ?? false;
@@ -125,7 +129,7 @@ export default function BookingModal() {
       const res = await fetch('/checkout/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ route, date, time, passengers, name, email, phone }),
+        body: JSON.stringify({ route, date, time, passengers, name, email, phone, selectedAddOns }),
       });
       if (!res.ok) {
         const { error } = await res.json().catch(() => ({ error: 'Payment setup failed' }));
@@ -155,8 +159,15 @@ export default function BookingModal() {
 
   const handleRouteChange = (next: FareId) => {
     setRoute(next);
+    setSelectedAddOns([]); // add-ons are fare-specific — clear when switching routes
     const f = getFare(next);
     if (f) setTime(f.defaultTime);
+  };
+
+  const toggleAddOn = (key: string) => {
+    setSelectedAddOns((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
   };
 
   return (
@@ -252,6 +263,44 @@ export default function BookingModal() {
                         ))}
                       </Select>
                     </Field>
+
+                    {fare && fare.addOns.length > 0 && (
+                      <fieldset className="space-y-2.5">
+                        <legend className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-mist-500">
+                          Add to your trip
+                        </legend>
+                        {fare.addOns.map((addon) => {
+                          const checked = selectedAddOns.includes(addon.key);
+                          return (
+                            <label
+                              key={addon.key}
+                              className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition ${
+                                checked
+                                  ? 'border-evergreen-500 bg-evergreen-50 ring-1 ring-evergreen-500/30'
+                                  : 'border-mist-200 bg-white hover:border-mist-300'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleAddOn(addon.key)}
+                                className="size-4 shrink-0 accent-evergreen-700"
+                              />
+                              <span className="flex-1">
+                                <span className="block text-sm font-semibold text-mist-900">{addon.label}</span>
+                                {addon.description && (
+                                  <span className="mt-0.5 block text-xs text-mist-500">{addon.description}</span>
+                                )}
+                              </span>
+                              <span className="shrink-0 text-sm font-bold tabular-nums text-evergreen-700">
+                                +{formatCents(addon.priceCents)}
+                                <span className="ml-1 text-[10px] font-medium text-mist-400">/ guest</span>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </fieldset>
+                    )}
 
                     <button type="submit" className={CTA_CLASS}>
                       Continue to contact
@@ -369,6 +418,7 @@ export default function BookingModal() {
               passengers={passengers}
               fareSubtotal={fareSubtotal}
               toll={toll}
+              addOns={addOnLines}
               tax={tax}
               total={total}
             />
@@ -438,7 +488,7 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
 }
 
 function TripSummary({
-  routeName, perSeat, originalPerSeat, onSale, tollPerSeat, note, date, time, passengers, fareSubtotal, toll, tax, total,
+  routeName, perSeat, originalPerSeat, onSale, tollPerSeat, note, date, time, passengers, fareSubtotal, toll, addOns, tax, total,
 }: {
   routeName: string;
   perSeat: number;
@@ -451,6 +501,7 @@ function TripSummary({
   passengers: number;
   fareSubtotal: number;
   toll: number;
+  addOns: FareAddOn[];
   tax: number;
   total: number;
 }) {
@@ -505,6 +556,12 @@ function TripSummary({
               <span className="tabular-nums">${toll.toFixed(2)}</span>
             </div>
           )}
+          {addOns.map((addon) => (
+            <div key={addon.key} className="mt-1.5 flex items-center justify-between text-xs text-mist-700">
+              <span>{addon.label} (${(addon.priceCents / 100).toFixed(2)} × {passengers})</span>
+              <span className="tabular-nums">${((addon.priceCents * passengers) / 100).toFixed(2)}</span>
+            </div>
+          ))}
           <div className="mt-1.5 flex items-center justify-between text-xs text-mist-700">
             <span>Alberta GST (5%)</span>
             <span className="tabular-nums">${tax.toFixed(2)}</span>

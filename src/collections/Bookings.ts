@@ -85,6 +85,21 @@ export const Bookings: CollectionConfig = {
         },
         { name: 'departureTime', type: 'text' },
         { name: 'seats', type: 'number', defaultValue: 1, required: true },
+        {
+          name: 'addOns',
+          type: 'array',
+          admin: { description: 'Optional extras selected at booking (per-passenger price snapshot, pre-GST).' },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                { name: 'key', type: 'text', admin: { width: '33%' } },
+                { name: 'label', type: 'text', admin: { width: '34%' } },
+                { name: 'priceCents', type: 'number', admin: { width: '33%' } },
+              ],
+            },
+          ],
+        },
       ],
     },
     // Pricing snapshot (CAD cents)
