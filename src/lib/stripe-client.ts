@@ -9,6 +9,9 @@ export function getStripe(): Promise<Stripe | null> {
       console.error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set');
       return Promise.resolve(null);
     }
+    // No apiVersion here: the browser SDK uses the account default + the PaymentIntent's
+    // version. Pinning it on the client makes Elements/PaymentElement fail to mount.
+    // The API version is pinned server-side in src/lib/stripe.ts instead.
     stripePromise = loadStripe(key);
   }
   return stripePromise;

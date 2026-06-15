@@ -5,33 +5,46 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// useSearchParams() triggers a client-render bailout, so the form is isolated
-// and wrapped in a Suspense boundary (default export below) for static builds.
-function SignInForm() {
+// Shared by the booking auto-account welcome email and the forgot-password flow — both
+// link here with a one-time ?token=. POSTs to Payload's reset-password endpoint, which
+// sets the customer's password and logs them in.
+function SetPasswordForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const redirectTo = params.get('redirect') || '/my-trips'
+  const token = params.get('token') || ''
 
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!token) {
+      setError('This link is missing its token. Request a new one from the sign-in page.')
+      return
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
     setLoading(true)
     try {
-      const res = await fetch('/api/customers/login', {
+      const res = await fetch('/api/customers/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ token, password }),
       })
       if (!res.ok) {
-        setError('Incorrect email or password.')
+        setError('That link is invalid or expired. Request a new one from the sign-in page.')
         return
       }
-      router.push(redirectTo)
+      router.push('/my-trips')
       router.refresh()
     } catch {
       setError('Something went wrong. Please try again.')
@@ -48,31 +61,31 @@ function SignInForm() {
         </Link>
 
         <div className="rounded-3xl border border-mist-200 bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
-          <h1 className="font-display text-2xl font-bold text-evergreen-800">Sign in</h1>
-          <p className="mt-1 text-sm text-mist-700">Access your RockFlower trips.</p>
+          <h1 className="font-display text-2xl font-bold text-evergreen-800">Set your password</h1>
+          <p className="mt-1 text-sm text-mist-700">Choose a password to finish setting up your account.</p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-mist-500">Email</label>
-              <input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-mist-200 bg-white px-4 py-3.5 text-mist-900 focus:border-evergreen-500 focus:outline-none focus:ring-2 focus:ring-evergreen-500/25"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-mist-500">Password</label>
+              <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-mist-500">New password</label>
               <input
                 id="password"
                 type="password"
                 required
-                autoComplete="current-password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-mist-200 bg-white px-4 py-3.5 text-mist-900 focus:border-evergreen-500 focus:outline-none focus:ring-2 focus:ring-evergreen-500/25"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirm" className="text-xs font-semibold uppercase tracking-wider text-mist-500">Confirm password</label>
+              <input
+                id="confirm"
+                type="password"
+                required
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
                 className="mt-1 w-full rounded-xl border border-mist-200 bg-white px-4 py-3.5 text-mist-900 focus:border-evergreen-500 focus:outline-none focus:ring-2 focus:ring-evergreen-500/25"
               />
             </div>
@@ -84,19 +97,14 @@ function SignInForm() {
               disabled={loading}
               className="w-full rounded-xl bg-sunrise-500 px-6 py-4 font-display font-bold text-evergreen-950 shadow-[var(--shadow-glow-sunrise)] transition-all hover:bg-sunrise-400 disabled:opacity-60"
             >
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? 'Saving…' : 'Set password & sign in'}
             </button>
           </form>
 
-          <p className="mt-4 text-center text-sm">
-            <Link href="/forgot-password" className="font-semibold text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">
-              Forgot your password?
-            </Link>
-          </p>
-          <p className="mt-2 text-center text-sm text-mist-700">
-            New here?{' '}
-            <Link href="/sign-up" className="font-semibold text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">
-              Create an account
+          <p className="mt-6 text-center text-sm text-mist-700">
+            Already set?{' '}
+            <Link href="/sign-in" className="font-semibold text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">
+              Sign in
             </Link>
           </p>
         </div>
@@ -105,10 +113,10 @@ function SignInForm() {
   )
 }
 
-export default function SignInPage() {
+export default function SetPasswordPage() {
   return (
     <Suspense fallback={<main className="min-h-screen bg-mist-50" />}>
-      <SignInForm />
+      <SetPasswordForm />
     </Suspense>
   )
 }

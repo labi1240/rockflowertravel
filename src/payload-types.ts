@@ -799,6 +799,8 @@ export interface Booking {
    */
   refundedBy?: string | null;
   refundReason?: string | null;
+  cancellationRequestedAt?: string | null;
+  cancellationReason?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1375,6 +1377,8 @@ export interface BookingsSelect<T extends boolean = true> {
   refundedAt?: T;
   refundedBy?: T;
   refundReason?: T;
+  cancellationRequestedAt?: T;
+  cancellationReason?: T;
   updatedAt?: T;
   createdAt?: T;
 }

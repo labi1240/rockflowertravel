@@ -46,7 +46,7 @@
     "react-map-gl": "^8.1.1",
     "resend": "^6.12.4",
     "sharp": "0.34.2",
-    "stripe": "^22.1.1",
+    "stripe": "^22.2.1",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
@@ -58,7 +58,7 @@
     "@types/mapbox-gl": "^3.5.0",
     "@types/node": "22.19.9",
     "@types/pg": "^8.20.0",
-    "@types/react": "19.2.14",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "4.5.2",
     "eslint": "^9.16.0",

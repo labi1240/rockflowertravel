@@ -156,5 +156,16 @@ export const Bookings: CollectionConfig = {
         { name: 'refundReason', type: 'textarea' },
       ],
     },
+    // Customer-initiated cancellation request (from My Trips). Staff review and refund
+    // via the button above — this only records the ask; it does not change status itself.
+    {
+      type: 'collapsible',
+      label: 'Cancellation request',
+      admin: { initCollapsed: true, description: 'Set when a rider requests cancellation from My Trips.' },
+      fields: [
+        { name: 'cancellationRequestedAt', type: 'date', admin: { date: { pickerAppearance: 'dayAndTime' } } },
+        { name: 'cancellationReason', type: 'textarea' },
+      ],
+    },
   ],
 }
