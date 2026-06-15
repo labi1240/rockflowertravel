@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import BookingModal from '@/components/BookingModal'
 import TripQR from '@/components/TripQR'
 import MessageThread from '@/components/MessageThread'
+import CancelBookingButton from '@/components/CancelBookingButton'
 import { getPayloadClient } from '@/lib/payload'
 import { getCurrentCustomer } from '@/lib/customer-auth'
 import { absoluteUrl } from '@/lib/seo'
@@ -146,6 +147,16 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
                 <Row label="Payment ref" mono subtle>{payment.stripePaymentIntentId}</Row>
               )}
             </Panel>
+
+            {(booking.status === 'CONFIRMED' || booking.status === 'PENDING_PAYMENT') && (
+              <div className="rounded-2xl border border-mist-200 bg-white p-6 shadow-[var(--shadow-card)]">
+                <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-evergreen-700">Need to cancel?</h2>
+                <p className="mb-4 text-sm text-mist-700">
+                  Free cancellation up to 24h before departure. Send a request and our team will review and process your refund.
+                </p>
+                <CancelBookingButton reference={booking.reference} requested={Boolean(booking.cancellationRequestedAt)} />
+              </div>
+            )}
 
             <MessageThread
               bookingId={booking.id}

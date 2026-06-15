@@ -139,3 +139,74 @@ export async function notifyCustomerOfReply(m: {
     console.error('[email] reply notification failed', err)
   }
 }
+
+/**
+ * Welcome a rider whose account was auto-created at booking, linking to a one-time
+ * set-password page. We never email a plaintext password. Fault-tolerant: never throws.
+ */
+export async function sendWelcomeSetPassword(d: {
+  email: string
+  firstName?: string | null
+  token: string
+  reference?: string | null
+}): Promise<void> {
+  const key = process.env.RESEND_API_KEY
+  if (!key) {
+    console.warn('[email] RESEND_API_KEY not set — skipping welcome email')
+    return
+  }
+  if (!d.email || !d.token) return
+  const url = absoluteUrl(`/set-password?token=${encodeURIComponent(d.token)}`)
+  const hi = d.firstName ? `Hi ${escapeHtml(d.firstName)}, ` : ''
+  const ref = d.reference ? ` (${escapeHtml(d.reference)})` : ''
+  const html = `
+  <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#211b16">
+    <h1 style="font-size:20px;color:#114b3b;margin:0 0 4px">Welcome to ${SITE.name} 🌸</h1>
+    <p style="color:#6b5d50;margin:0 0 16px">${hi}we created an account for you so you can manage your booking${ref}, view your boarding pass, and request changes. Set a password to finish setting it up:</p>
+    <a href="${url}" style="display:inline-block;background:#e8a13a;color:#0f2a20;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px">Set your password →</a>
+    <p style="color:#8a7c6d;font-size:12px;margin-top:16px">This link expires in 1 hour. You can always sign in later and reset it from the sign-in page.</p>
+  </div>`
+  try {
+    await new Resend(key).emails.send({
+      from: FROM,
+      to: d.email,
+      subject: `Welcome to ${SITE.name} — set your password`,
+      html,
+    })
+  } catch (err) {
+    console.error('[email] welcome email failed', err)
+  }
+}
+
+/** Notify the support inbox that a rider requested cancellation. Fault-tolerant: never throws. */
+export async function sendCancellationRequestToStaff(d: {
+  reference: string
+  bookingId: number | string
+  customerEmail: string
+  reason?: string | null
+}): Promise<void> {
+  const key = process.env.RESEND_API_KEY
+  const to = process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM
+  if (!key || !to) {
+    console.warn('[email] RESEND_API_KEY or SUPPORT_EMAIL not set — skipping cancellation notice')
+    return
+  }
+  const adminUrl = absoluteUrl(`/admin/collections/bookings/${d.bookingId}`)
+  const html = messageCardHtml(
+    'Cancellation requested',
+    `${escapeHtml(d.customerEmail)} requested to cancel booking ${escapeHtml(d.reference)}. Review and refund in the admin if appropriate.`,
+    d.reason?.trim() ? d.reason : '(no reason provided)',
+    adminUrl,
+    'Open booking in admin',
+  )
+  try {
+    await new Resend(key).emails.send({
+      from: FROM,
+      to,
+      subject: `Cancellation requested — ${d.reference} — ${SITE.name}`,
+      html,
+    })
+  } catch (err) {
+    console.error('[email] cancellation notice failed', err)
+  }
+}

@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { releaseDepartureSeats } from '@/lib/inventory'
 import { sendBookingConfirmation } from '@/lib/email'
+import { provisionCustomerForBooking } from '@/lib/customer-provision'
 
 export const runtime = 'nodejs'
 
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest) {
             currency: confirmed.currency,
           })
         }
+        // Give guest bookings an account (or claim an existing one) so the trip appears
+        // in My Trips. No-op for already-signed-in bookings. Never throws.
+        await provisionCustomerForBooking(payload, confirmed)
         const payment = await findPaymentByIntent(pi.id)
         if (payment) {
           await payload.update({
