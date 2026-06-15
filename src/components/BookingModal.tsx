@@ -57,6 +57,7 @@ export default function BookingModal() {
   const [date, setDate] = useState<string>('2026-05-21');
   const [passengers, setPassengers] = useState<number>(1);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [seatsRemaining, setSeatsRemaining] = useState<number | null>(null);
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
@@ -94,18 +95,40 @@ export default function BookingModal() {
       setTime(fares[0].defaultTime);
     }
   }, [isOpen, route, fares, getFare]);
+  // Live seat availability for the selected departure → drives the demand-surge preview.
+  // The checkout endpoint re-reads and re-prices authoritatively; this only keeps the
+  // previewed price honest. Fail-open: on error we leave seats unknown (no surge shown).
+  useEffect(() => {
+    if (!isOpen || !route || !date || !time) return;
+    let cancelled = false;
+    setSeatsRemaining(null);
+    const params = new URLSearchParams({ route, date, time });
+    fetch(`/checkout/availability?${params.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d && typeof d.seatsRemaining === 'number') {
+          setSeatsRemaining(d.seatsRemaining);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isOpen, route, date, time]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // Resolve the selected fare from the DB-backed catalog, falling back to the first fare
   // if the stored id is missing (e.g. a deactivated/removed fare).
   const fare = getFare(route) ?? fares[0];
-  const q = fare ? quote(fare, passengers, nowMs, selectedAddOns) : null;
+  const q = fare ? quote(fare, passengers, nowMs, selectedAddOns, seatsRemaining) : null;
   const fareSubtotal = (q?.fareCents ?? 0) / 100; // effective fare × passengers
   const toll = (q?.tollCents ?? 0) / 100; // Moraine toll × passengers
   const addOnLines = q?.selectedAddOns ?? []; // resolved, charge-authoritative add-ons
   const tax = (q?.gstCents ?? 0) / 100;
   const total = (q?.totalCents ?? 0) / 100;
   const onSale = q?.onSale ?? false;
+  const surged = q?.surged ?? false; // demand surge active on the seat fare
+  const surgePct = Math.round((q?.surgeRate ?? 0) * 100);
+  const basePerSeat = (q?.baseUnitPriceCents ?? fare?.priceCents ?? 0) / 100; // pre-surge per seat
+  const seatsLeft = q?.seatsRemaining ?? null;
   const perSeat = (q?.unitPriceCents ?? fare?.priceCents ?? 0) / 100;
   const originalPerSeat = (fare?.priceCents ?? 0) / 100;
   const timeOptions =
@@ -264,6 +287,22 @@ export default function BookingModal() {
                       </Select>
                     </Field>
 
+                    {seatsLeft !== null && seatsLeft > 0 && seatsLeft <= 6 && (
+                      <div
+                        className={`flex items-start gap-3 rounded-xl p-4 ring-1 ${
+                          surged ? 'bg-sunrise-50 ring-sunrise-500/30' : 'bg-mist-50 ring-mist-200'
+                        }`}
+                      >
+                        <span aria-hidden className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-sunrise-100 text-sunrise-700">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                        </span>
+                        <p className="text-xs leading-relaxed text-mist-700">
+                          <strong className="text-mist-900">Only {seatsLeft} seat{seatsLeft === 1 ? '' : 's'} left</strong> on this departure.
+                          {surged && <> Peak-demand pricing (+{surgePct}%) is applied to the seat fare.</>}
+                        </p>
+                      </div>
+                    )}
+
                     {fare && fare.addOns.length > 0 && (
                       <fieldset className="space-y-2.5">
                         <legend className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-mist-500">
@@ -411,6 +450,9 @@ export default function BookingModal() {
               perSeat={perSeat}
               originalPerSeat={originalPerSeat}
               onSale={onSale}
+              surged={surged}
+              surgePct={surgePct}
+              basePerSeat={basePerSeat}
               tollPerSeat={(fare?.tollCents ?? 0) / 100}
               note={fare?.note ?? undefined}
               date={date}
@@ -488,12 +530,15 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
 }
 
 function TripSummary({
-  routeName, perSeat, originalPerSeat, onSale, tollPerSeat, note, date, time, passengers, fareSubtotal, toll, addOns, tax, total,
+  routeName, perSeat, originalPerSeat, onSale, surged, surgePct, basePerSeat, tollPerSeat, note, date, time, passengers, fareSubtotal, toll, addOns, tax, total,
 }: {
   routeName: string;
   perSeat: number;
   originalPerSeat: number;
   onSale: boolean;
+  surged: boolean;
+  surgePct: number;
+  basePerSeat: number;
   tollPerSeat: number;
   note?: string;
   date: string;
@@ -533,14 +578,18 @@ function TripSummary({
           <div>
             <p className="font-display text-sm font-bold leading-snug text-mist-900">
               ${perSeat.toFixed(2)}
-              {onSale && (
+              {surged ? (
+                <span className="ml-1.5 text-[11px] font-semibold text-mist-400 line-through">
+                  ${basePerSeat.toFixed(2)}
+                </span>
+              ) : onSale ? (
                 <span className="ml-1.5 text-[11px] font-semibold text-mist-400 line-through">
                   ${originalPerSeat.toFixed(2)}
                 </span>
-              )}
+              ) : null}
             </p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-mist-500">
-              Per seat{onSale ? ' · Sale' : ''}
+              Per seat{surged ? ` · Peak +${surgePct}%` : onSale ? ' · Sale' : ''}
             </p>
           </div>
         </div>

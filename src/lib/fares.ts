@@ -19,6 +19,17 @@ export type FareTier = 'sunrise' | 'daytime' | 'evening'
 
 export const GST_RATE = 0.05
 
+// Demand-based surge: once a departure is nearly full, the per-seat fare rises. Applied to
+// the base seat fare ONLY (toll + add-ons are unaffected). Kept here — shared by the live
+// client preview and the server checkout — so the rider's previewed price equals the charge.
+export const SURGE_SEAT_THRESHOLD = 4 // surge when this many seats (or fewer) remain
+export const SURGE_RATE = 0.12 // +12% on the per-seat fare while surging
+
+/** True when seat count is known and at/below the surge threshold (a sold-out 0 doesn't surge). */
+export function isSurgeActive(seatsRemaining: number | null | undefined): boolean {
+  return seatsRemaining != null && seatsRemaining > 0 && seatsRemaining <= SURGE_SEAT_THRESHOLD
+}
+
 // An optional extra a rider can toggle on at booking (e.g. "Add Moraine Lake stop").
 // Priced per passenger, pre-GST — taxed the same as the base fare and toll.
 export interface FareAddOn {
@@ -81,10 +92,14 @@ export function effectiveUnitPrice(fare: FarePricing, nowMs: number): number {
 }
 
 export interface Quote {
-  unitPriceCents: number // effective per-seat price charged (sale-aware)
-  originalUnitPriceCents: number // base price, for strikethrough display
+  unitPriceCents: number // per-seat price charged (sale- AND surge-aware)
+  baseUnitPriceCents: number // per-seat price before surge (sale-aware) — strikethrough when surged
+  originalUnitPriceCents: number // list price before sale, for sale strikethrough
   onSale: boolean
-  fareCents: number // effective unit × passengers
+  surged: boolean // demand surge applied to the seat fare
+  surgeRate: number // applied surge rate (0 when not surged, else SURGE_RATE)
+  seatsRemaining: number | null // seats left on the departure (null when unknown)
+  fareCents: number // charged unit × passengers
   tollCents: number // toll × passengers
   addOnCents: number // selected add-ons × passengers
   selectedAddOns: FareAddOn[] // resolved add-ons (for line-item display)
@@ -107,14 +122,20 @@ export function resolveAddOns(fare: FarePricing, selectedKeys: readonly string[]
 // Server-authoritative AND client-preview pricing. Single implementation over a
 // FareDTO so server and client always agree. `nowMs` makes sale evaluation explicit.
 // `selectedAddOnKeys` toggles optional per-passenger extras into the taxable subtotal.
+// `seatsRemaining` (when known) drives the demand surge on the per-seat fare.
 export function quote(
   fare: FarePricing,
   passengers: number,
   nowMs: number,
   selectedAddOnKeys: readonly string[] = [],
+  seatsRemaining: number | null = null,
 ): Quote {
   const onSale = isSaleActive(fare, nowMs)
-  const unitPriceCents = onSale ? (fare.salePriceCents as number) : fare.priceCents
+  // Effective seat price after any sale, before surge.
+  const baseUnitPriceCents = onSale ? (fare.salePriceCents as number) : fare.priceCents
+  const surged = isSurgeActive(seatsRemaining)
+  // Surge applies to the seat fare only — round to whole cents so the per-seat figure is exact.
+  const unitPriceCents = surged ? Math.round(baseUnitPriceCents * (1 + SURGE_RATE)) : baseUnitPriceCents
   const fareCents = unitPriceCents * passengers
   const tollCents = fare.tollCents * passengers
   const selectedAddOns = resolveAddOns(fare, selectedAddOnKeys)
@@ -124,8 +145,12 @@ export function quote(
   const gstCents = Math.round(subtotalCents * GST_RATE)
   return {
     unitPriceCents,
+    baseUnitPriceCents,
     originalUnitPriceCents: fare.priceCents,
     onSale,
+    surged,
+    surgeRate: surged ? SURGE_RATE : 0,
+    seatsRemaining: seatsRemaining ?? null,
     fareCents,
     tollCents,
     addOnCents,

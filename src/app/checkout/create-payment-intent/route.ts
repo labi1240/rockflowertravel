@@ -8,6 +8,7 @@ import {
   reserveDepartureSeats,
   releaseDepartureSeats,
   releaseExpiredHolds,
+  getDepartureSeats,
   type DepartureKey,
 } from '@/lib/inventory'
 
@@ -57,10 +58,6 @@ export async function POST(req: NextRequest) {
     if (!fare || !fare.active) {
       return NextResponse.json({ error: 'Invalid route' }, { status: 400 })
     }
-    // quote() drops any add-on key not on the fare; `selectedAddOns` on the quote is the
-    // authoritative resolved list we charge and snapshot (never trust client prices).
-    const q = quote(fare, passengers, Date.now(), selectedAddOns)
-    const { subtotalCents, gstCents, totalCents } = q
 
     // Route snapshot (enum-independent).
     const routeKindValue = fare.routeKind && ROUTE_KINDS.has(fare.routeKind) ? fare.routeKind : null
@@ -91,6 +88,14 @@ export async function POST(req: NextRequest) {
 
     // Reclaim seats from already-expired holds on this departure first.
     await releaseExpiredHolds(payload, inventoryKey)
+
+    // Seats left BEFORE this booking drive the demand surge (≤4 left → +12% on the seat
+    // fare), read post-hold-release so it's authoritative. quote() also drops any add-on
+    // key not on the fare — q.selectedAddOns is what we charge and snapshot (client prices
+    // are never trusted).
+    const { seatsRemaining } = await getDepartureSeats(payload, inventoryKey)
+    const q = quote(fare, passengers, Date.now(), selectedAddOns, seatsRemaining)
+    const { subtotalCents, gstCents, totalCents } = q
 
     // Link to a signed-in customer if a session is present; otherwise guest checkout.
     let customerId: number | null = null
