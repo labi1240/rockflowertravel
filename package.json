@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.85.0",
+    "@payloadcms/email-nodemailer": "3.85.0",
     "@payloadcms/next": "3.85.0",
     "@payloadcms/richtext-lexical": "3.85.0",
     "@payloadcms/storage-uploadthing": "^3.85.0",
@@ -37,6 +38,7 @@
     "mapbox-gl": "^3.24.0",
     "motion": "^12.40.0",
     "next": "16.2.6",
+    "nodemailer": "^8.0.11",
     "payload": "3.85.0",
     "qrcode.react": "^4.2.0",
     "react": "19.2.6",

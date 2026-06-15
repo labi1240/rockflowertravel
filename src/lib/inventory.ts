@@ -16,12 +16,18 @@ import type { Payload } from 'payload'
  * UPDATE primitive); table/column identifiers match the generated Payload schema.
  */
 
-export const DEFAULT_DEPARTURE_SEATS = 25
+export const DEFAULT_DEPARTURE_SEATS = 24
 
 export interface DepartureKey {
   routeSlug: string
   serviceDateISO: string // "YYYY-MM-DD"
   departureTime: string // "7:00 AM"
+}
+
+export interface DepartureSeats {
+  seatsTotal: number
+  seatsBooked: number // includes pending holds
+  seatsRemaining: number
 }
 
 // `service_date` is a timestamptz; we always store/compare at UTC midnight of the day so
@@ -37,6 +43,30 @@ interface PgPool {
 
 const pool = (payload: Payload): PgPool =>
   (payload.db as unknown as { pool: PgPool }).pool
+
+/**
+ * Read seat availability for a departure WITHOUT mutating it. A missing row means a fresh
+ * departure at default capacity (no row is created — reads stay side-effect free).
+ * `seatsBooked` includes pending holds, so the figure is conservative (may surge slightly
+ * early); call `releaseExpiredHolds` first when an exact count matters (the checkout does).
+ */
+export async function getDepartureSeats(
+  payload: Payload,
+  key: DepartureKey,
+): Promise<DepartureSeats> {
+  const res = await pool(payload).query(
+    `SELECT seats_total, seats_booked FROM departure_inventory
+       WHERE route_slug = $1 AND service_date = $2 AND departure_time = $3
+     LIMIT 1`,
+    [key.routeSlug, toUTCMidnight(key.serviceDateISO), key.departureTime],
+  )
+  if (!res.rows.length) {
+    return { seatsTotal: DEFAULT_DEPARTURE_SEATS, seatsBooked: 0, seatsRemaining: DEFAULT_DEPARTURE_SEATS }
+  }
+  const seatsTotal = Number(res.rows[0].seats_total)
+  const seatsBooked = Number(res.rows[0].seats_booked)
+  return { seatsTotal, seatsBooked, seatsRemaining: Math.max(0, seatsTotal - seatsBooked) }
+}
 
 /**
  * Atomically reserve `seats` on a departure. Returns true if reserved, false if the

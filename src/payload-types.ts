@@ -671,6 +671,34 @@ export interface Fare {
   defaultTime: string;
   note?: string | null;
   /**
+   * Optional extras a rider can toggle on at booking, e.g. "Add Moraine Lake stop". Priced per passenger, pre-GST. GST is applied to the add-on like the base fare.
+   */
+  addOns?:
+    | {
+        /**
+         * Stable id, e.g. moraine-stop. Unique within this fare.
+         */
+        key: string;
+        /**
+         * Shown on the toggle, e.g. "Add Moraine Lake".
+         */
+        label: string;
+        /**
+         * Per-passenger add-on price, CAD cents, pre-GST.
+         */
+        priceCents: number;
+        /**
+         * Hide from the booking form + reject at checkout when off.
+         */
+        active?: boolean | null;
+        /**
+         * Optional sub-label shown under the add-on (e.g. "30 min scenic detour").
+         */
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Hide from selectors + reject at checkout when off.
    */
   active?: boolean | null;
@@ -746,6 +774,17 @@ export interface Booking {
   serviceDate?: string | null;
   departureTime?: string | null;
   seats: number;
+  /**
+   * Optional extras selected at booking (per-passenger price snapshot, pre-GST).
+   */
+  addOns?:
+    | {
+        key?: string | null;
+        label?: string | null;
+        priceCents?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   subtotalCents: number;
   gstCents: number;
   totalCents: number;
@@ -1256,6 +1295,16 @@ export interface FaresSelect<T extends boolean = true> {
   premium?: T;
   defaultTime?: T;
   note?: T;
+  addOns?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        priceCents?: T;
+        active?: T;
+        description?: T;
+        id?: T;
+      };
   active?: T;
   sortOrder?: T;
   sale?:
@@ -1310,6 +1359,14 @@ export interface BookingsSelect<T extends boolean = true> {
   serviceDate?: T;
   departureTime?: T;
   seats?: T;
+  addOns?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        priceCents?: T;
+        id?: T;
+      };
   subtotalCents?: T;
   gstCents?: T;
   totalCents?: T;

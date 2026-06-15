@@ -36,7 +36,7 @@ export const DepartureInventory: CollectionConfig = {
       required: true,
       admin: { description: 'Displayed time, e.g. "7:00 AM" — must match Booking.departureTime.' },
     },
-    { name: 'seatsTotal', type: 'number', defaultValue: 25, required: true },
+    { name: 'seatsTotal', type: 'number', defaultValue: 24, required: true },
     { name: 'seatsBooked', type: 'number', defaultValue: 0, required: true },
   ],
 }

@@ -38,6 +38,14 @@ export function toFareDTO(row: Fare): FareDTO {
     destination: row.destination,
     priceCents: row.priceCents,
     tollCents: row.tollCents ?? 0,
+    addOns: (row.addOns ?? [])
+      .filter((a) => a.active !== false)
+      .map((a) => ({
+        key: a.key,
+        label: a.label,
+        description: a.description ?? null,
+        priceCents: a.priceCents,
+      })),
     roundTrip: Boolean(row.roundTrip),
     premium: Boolean(row.premium),
     defaultTime: row.defaultTime,

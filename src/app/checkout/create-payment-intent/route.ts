@@ -8,6 +8,7 @@ import {
   reserveDepartureSeats,
   releaseDepartureSeats,
   releaseExpiredHolds,
+  getDepartureSeats,
   type DepartureKey,
 } from '@/lib/inventory'
 
@@ -25,6 +26,7 @@ const InputSchema = z.object({
   name: z.string().trim().min(1).max(120),
   email: z.string().email(),
   phone: z.string().min(5).max(40),
+  selectedAddOns: z.array(z.string().min(1)).max(20).optional().default([]),
 })
 
 function generateReference(): string {
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', issues: parsed.error.issues }, { status: 400 })
     }
-    const { route, date, time, passengers, name, email, phone } = parsed.data
+    const { route, date, time, passengers, name, email, phone, selectedAddOns } = parsed.data
 
     const payload = await getPayloadClient()
 
@@ -56,7 +58,6 @@ export async function POST(req: NextRequest) {
     if (!fare || !fare.active) {
       return NextResponse.json({ error: 'Invalid route' }, { status: 400 })
     }
-    const { subtotalCents, gstCents, totalCents } = quote(fare, passengers, Date.now())
 
     // Route snapshot (enum-independent).
     const routeKindValue = fare.routeKind && ROUTE_KINDS.has(fare.routeKind) ? fare.routeKind : null
@@ -87,6 +88,14 @@ export async function POST(req: NextRequest) {
 
     // Reclaim seats from already-expired holds on this departure first.
     await releaseExpiredHolds(payload, inventoryKey)
+
+    // Seats left BEFORE this booking drive the demand surge (≤4 left → +12% on the seat
+    // fare), read post-hold-release so it's authoritative. quote() also drops any add-on
+    // key not on the fare — q.selectedAddOns is what we charge and snapshot (client prices
+    // are never trusted).
+    const { seatsRemaining } = await getDepartureSeats(payload, inventoryKey)
+    const q = quote(fare, passengers, Date.now(), selectedAddOns, seatsRemaining)
+    const { subtotalCents, gstCents, totalCents } = q
 
     // Link to a signed-in customer if a session is present; otherwise guest checkout.
     let customerId: number | null = null
@@ -124,6 +133,7 @@ export async function POST(req: NextRequest) {
           routeSlug: routeSlug ?? undefined,
           serviceDate: new Date(`${date}T00:00:00.000Z`).toISOString(),
           departureTime: time,
+          addOns: q.selectedAddOns.map((a) => ({ key: a.key, label: a.label, priceCents: a.priceCents })),
           guestEmail: email,
           guestFirstName: firstName,
           guestLastName: lastName,
@@ -169,6 +179,7 @@ export async function POST(req: NextRequest) {
         date,
         time,
         passengers: String(passengers),
+        ...(q.selectedAddOns.length ? { addOns: q.selectedAddOns.map((a) => a.key).join(',') } : {}),
       },
     })
 

@@ -80,6 +80,33 @@ export const Fares: CollectionConfig = {
     { name: 'defaultTime', type: 'text', required: true, admin: { description: 'Display default departure, e.g. "7:00 AM".' } },
     { name: 'note', type: 'textarea' },
     {
+      name: 'addOns',
+      type: 'array',
+      label: 'Optional add-ons',
+      admin: {
+        description:
+          'Optional extras a rider can toggle on at booking, e.g. "Add Moraine Lake stop". Priced per passenger, pre-GST. GST is applied to the add-on like the base fare.',
+      },
+      labels: { singular: 'Add-on', plural: 'Add-ons' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'key', type: 'text', required: true, admin: { width: '40%', description: 'Stable id, e.g. moraine-stop. Unique within this fare.' } },
+            { name: 'label', type: 'text', required: true, admin: { width: '60%', description: 'Shown on the toggle, e.g. "Add Moraine Lake".' } },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            { name: 'priceCents', type: 'number', required: true, admin: { width: '50%', description: 'Per-passenger add-on price, CAD cents, pre-GST.' } },
+            { name: 'active', type: 'checkbox', defaultValue: true, admin: { width: '50%', description: 'Hide from the booking form + reject at checkout when off.' } },
+          ],
+        },
+        { name: 'description', type: 'text', admin: { description: 'Optional sub-label shown under the add-on (e.g. "30 min scenic detour").' } },
+      ],
+    },
+    {
       name: 'active',
       type: 'checkbox',
       defaultValue: true,
