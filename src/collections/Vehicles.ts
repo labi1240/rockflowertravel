@@ -12,7 +12,7 @@ export const Vehicles: CollectionConfig = {
   access: { read: isStaff, create: isStaff, update: isStaff, delete: isStaff },
   fields: [
     { name: 'code', type: 'text', required: true, unique: true },
-    { name: 'seatCapacity', type: 'number', defaultValue: 25, required: true },
+    { name: 'seatCapacity', type: 'number', defaultValue: 24, required: true },
     { name: 'active', type: 'checkbox', defaultValue: true },
   ],
 }

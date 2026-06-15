@@ -154,7 +154,7 @@ export async function seed(payload: Payload): Promise<void> {
   // ── Vehicles ───────────────────────────────────────────────────────────────
   for (let i = 1; i <= 4; i++) {
     const code = `BUS-0${i}`
-    await upsert('vehicles', 'code', code, { code, seatCapacity: 25, active: true })
+    await upsert('vehicles', 'code', code, { code, seatCapacity: 24, active: true })
   }
   log('vehicles: 4')
 
