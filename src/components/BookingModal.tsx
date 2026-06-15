@@ -57,7 +57,9 @@ export default function BookingModal() {
   const [date, setDate] = useState<string>('2026-05-21');
   const [passengers, setPassengers] = useState<number>(1);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
-  const [seatsRemaining, setSeatsRemaining] = useState<number | null>(null);
+  // Seats remaining per departure time for the selected route+date (drives the slot
+  // picker's sold-out state and the surge preview). Empty/unknown = fail-open.
+  const [slotSeats, setSlotSeats] = useState<Record<string, number>>({});
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
@@ -95,29 +97,56 @@ export default function BookingModal() {
       setTime(fares[0].defaultTime);
     }
   }, [isOpen, route, fares, getFare]);
-  // Live seat availability for the selected departure → drives the demand-surge preview.
-  // The checkout endpoint re-reads and re-prices authoritatively; this only keeps the
-  // previewed price honest. Fail-open: on error we leave seats unknown (no surge shown).
+  // Live seat availability for EVERY departure on the selected route+date. Drives both the
+  // slot picker's sold-out state and the surge preview for the chosen slot. The checkout
+  // endpoint re-reads and re-prices authoritatively; this only keeps the UI honest.
+  // Fail-open: on error the map stays empty → no slot is blocked and no surge is shown.
   useEffect(() => {
-    if (!isOpen || !route || !date || !time) return;
+    if (!isOpen || !route || !date) return;
+    const f = getFare(route);
+    const opts = TIME_OPTIONS[route] ?? (f ? [{ value: f.defaultTime, label: f.defaultTime }] : []);
+    const times = opts.map((o) => o.value);
+    if (!times.length) return;
     let cancelled = false;
-    setSeatsRemaining(null);
-    const params = new URLSearchParams({ route, date, time });
+    setSlotSeats({});
+    const params = new URLSearchParams({ route, date, times: times.join(',') });
     fetch(`/checkout/availability?${params.toString()}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!cancelled && d && typeof d.seatsRemaining === 'number') {
-          setSeatsRemaining(d.seatsRemaining);
+        if (cancelled || !d || !Array.isArray(d.slots)) return;
+        const map: Record<string, number> = {};
+        for (const s of d.slots) {
+          if (s && typeof s.time === 'string' && typeof s.seatsRemaining === 'number') {
+            map[s.time] = s.seatsRemaining;
+          }
         }
+        setSlotSeats(map);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [isOpen, route, date, time]);
+  }, [isOpen, route, date, getFare]);
+
+  // Auto-advance: if the selected slot can't seat the party (sold out / not enough left),
+  // hop to the next departure that can. Unknown counts are treated as available (fail-open).
+  useEffect(() => {
+    if (!isOpen) return;
+    const opts = TIME_OPTIONS[route] ?? [];
+    if (!opts.length) return;
+    const fits = (v: string) => {
+      const r = slotSeats[v];
+      return r == null || r >= passengers;
+    };
+    if (time && fits(time)) return;
+    const next = opts.find((o) => fits(o.value));
+    if (next && next.value !== time) setTime(next.value);
+  }, [isOpen, route, slotSeats, passengers, time]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // Resolve the selected fare from the DB-backed catalog, falling back to the first fare
   // if the stored id is missing (e.g. a deactivated/removed fare).
   const fare = getFare(route) ?? fares[0];
+  // Seats left on the chosen slot (null = unknown/loading) → feeds the surge preview.
+  const seatsRemaining = time && slotSeats[time] != null ? slotSeats[time] : null;
   const q = fare ? quote(fare, passengers, nowMs, selectedAddOns, seatsRemaining) : null;
   const fareSubtotal = (q?.fareCents ?? 0) / 100; // effective fare × passengers
   const toll = (q?.tollCents ?? 0) / 100; // Moraine toll × passengers
@@ -134,8 +163,23 @@ export default function BookingModal() {
   const timeOptions =
     TIME_OPTIONS[route] ?? (fare ? [{ value: fare.defaultTime, label: fare.defaultTime }] : []);
 
+  // Per-slot picker state. Unknown counts (still loading / fetch failed) stay selectable.
+  const slotInfo = (value: string): { disabled: boolean; suffix: string } => {
+    const r = slotSeats[value];
+    if (r == null) return { disabled: false, suffix: '' };
+    if (r <= 0) return { disabled: true, suffix: ' — Sold out' };
+    if (r < passengers) return { disabled: true, suffix: ` — only ${r} left` };
+    if (r <= 4) return { disabled: false, suffix: ` — ${r} left` };
+    return { disabled: false, suffix: '' };
+  };
+  const selectedSlotFull = !!time && slotSeats[time] != null && slotSeats[time] < passengers;
+  const allSlotsFull =
+    timeOptions.length > 0 &&
+    timeOptions.every((o) => slotSeats[o.value] != null && slotSeats[o.value] < passengers);
+
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedSlotFull) return; // sold out for this party size — blocked + messaged below
     setStep(2);
   };
 
@@ -281,10 +325,28 @@ export default function BookingModal() {
 
                     <Field label="Departure time" htmlFor="modal-time">
                       <Select id="modal-time" value={time} onChange={setTime}>
-                        {timeOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
+                        {timeOptions.map((opt) => {
+                          const info = slotInfo(opt.value);
+                          return (
+                            <option key={opt.value} value={opt.value} disabled={info.disabled}>
+                              {opt.label}{info.suffix}
+                            </option>
+                          );
+                        })}
                       </Select>
+                      {allSlotsFull ? (
+                        <p className="mt-1.5 text-xs font-semibold text-red-600">
+                          Every departure is full on this date for {passengers} {passengers === 1 ? 'guest' : 'guests'} — please choose another date.
+                        </p>
+                      ) : selectedSlotFull ? (
+                        <p className="mt-1.5 text-xs font-semibold text-red-600">
+                          This departure can’t seat {passengers} guests — pick another time.
+                        </p>
+                      ) : seatsRemaining != null && seatsRemaining <= 4 ? (
+                        <p className="mt-1.5 text-xs font-semibold text-sunrise-700">
+                          Hurry — only {seatsRemaining} {seatsRemaining === 1 ? 'seat' : 'seats'} left on this departure.
+                        </p>
+                      ) : null}
                     </Field>
 
                     {seatsLeft !== null && seatsLeft > 0 && seatsLeft <= 6 && (
@@ -341,8 +403,12 @@ export default function BookingModal() {
                       </fieldset>
                     )}
 
-                    <button type="submit" className={CTA_CLASS}>
-                      Continue to contact
+                    <button
+                      type="submit"
+                      disabled={selectedSlotFull || allSlotsFull}
+                      className={`${CTA_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {selectedSlotFull || allSlotsFull ? 'Sold out — choose another time' : 'Continue to contact'}
                       <span aria-hidden>→</span>
                     </button>
                   </form>
