@@ -23,9 +23,32 @@ import { Messages } from './collections/Messages'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const serverURL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+// Origins allowed to authenticate against the admin / REST API.
+// Payload otherwise seeds `csrf` from `serverURL` alone — and `extractJWT`
+// silently DROPS the auth cookie for any request whose Origin isn't on this
+// list, so `req.user` becomes undefined and every write fails with
+// "You are not allowed to perform this action." That bites the production
+// custom domain (rockflowertravels.ca) and localhost, neither of which equals
+// the Vercel serverURL. List every origin the panel is actually served from.
+const allowedOrigins = [
+  ...new Set(
+    [
+      serverURL,
+      'https://rockflowertravels.ca',
+      'https://www.rockflowertravels.ca',
+      'https://rockflowertravel.vercel.app',
+      'http://localhost:3000',
+    ].filter(Boolean),
+  ),
+]
+
 export default buildConfig({
   // Used to build absolute links in transactional email (e.g. password-reset).
-  serverURL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+  serverURL,
+  cors: allowedOrigins,
+  csrf: allowedOrigins,
   admin: {
     user: Users.slug,
     importMap: {
@@ -64,7 +87,7 @@ export default buildConfig({
     ? nodemailerAdapter({
         defaultFromName: 'RockFlower Travels',
         defaultFromAddress:
-          process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'hello@rockflowertravels.ca',
+          process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'Rockflowertravels@gmail.com',
         transportOptions: {
           host: process.env.MAILTRAP_HOST,
           port: Number(process.env.MAILTRAP_PORT) || 2525,
