@@ -41,13 +41,13 @@ export default function Footer() {
 
         <FooterColumn title="Contact">
           <li>
-            <a href="mailto:info@rockflowertravels.ca" className="font-display text-base font-bold text-mist-900 transition hover:text-sunrise-700">
-              info@rockflowertravels.ca
+            <a href="mailto:rockflowertravels@gmail.com" className="font-display text-base font-bold text-mist-900 transition hover:text-sunrise-700">
+              rockflowertravels@gmail.com
             </a>
           </li>
           <li>
-            <a href="tel:+14035550199" className="font-display text-base font-bold text-mist-900 transition hover:text-sunrise-700 tabular-nums">
-              +1&nbsp;(403)&nbsp;555-0199
+            <a href="tel:+14379903860" className="font-display text-base font-bold text-mist-900 transition hover:text-sunrise-700 tabular-nums">
+              +1&nbsp;(437)&nbsp;990-3860
             </a>
           </li>
           <li className="text-sm text-mist-500">Banff Visitor Center</li>

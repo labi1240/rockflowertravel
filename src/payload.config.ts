@@ -87,7 +87,7 @@ export default buildConfig({
     ? nodemailerAdapter({
         defaultFromName: 'RockFlower Travels',
         defaultFromAddress:
-          process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'Rockflowertravels@gmail.com',
+          process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'rockflowertravels@gmail.com',
         transportOptions: {
           host: process.env.MAILTRAP_HOST,
           port: Number(process.env.MAILTRAP_PORT) || 2525,

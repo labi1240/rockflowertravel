@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const EFFECTIVE_DATE = 'May 23, 2026';
-const CONTACT_EMAIL = 'info@rockflowertravels.ca';
+const CONTACT_EMAIL = 'rockflowertravels@gmail.com';
 const COMPANY = 'RockFlower Travels Inc.';
 
 export default function PrivacyPolicyPage() {

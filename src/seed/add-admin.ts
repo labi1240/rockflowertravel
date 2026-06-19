@@ -5,7 +5,7 @@
 import { getPayload } from 'payload'
 import config from '../payload.config'
 
-const EMAIL = process.argv[2] || 'Rockflowertravels@gmail.com'
+const EMAIL = process.argv[2] || 'rockflowertravels@gmail.com'
 const PASSWORD = process.argv[3] || 'ChangeMe!2026'
 const NAME = 'RockFlower Admin'
 
