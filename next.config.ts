@@ -20,6 +20,25 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.ufs.sh', pathname: '/f/**' },
       { protocol: 'https', hostname: 'utfs.io', pathname: '/f/**' },
     ],
+    // Serve modern formats and cache optimized variants for a year so the
+    // image optimizer doesn't re-fetch/re-encode on every request.
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000,
+  },
+  async headers() {
+    return [
+      {
+        // Static marketing assets in /public are immutable — cache hard at the
+        // edge/browser so bots and repeat visitors don't re-pull them from origin.
+        source: '/:file*.(mp4|webm|png|jpg|jpeg|webp|avif|svg|ico|woff|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
