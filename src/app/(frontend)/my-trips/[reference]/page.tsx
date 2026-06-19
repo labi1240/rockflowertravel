@@ -165,7 +165,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
             <p className="text-xs text-mist-500">
               Prefer email? Reach us at{' '}
-              <a href="mailto:hello@rockflowertravels.ca" className="text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">hello@rockflowertravels.ca</a>.
+              <a href="mailto:rockflowertravels@gmail.com" className="text-evergreen-700 underline underline-offset-2 hover:text-evergreen-800">rockflowertravels@gmail.com</a>.
             </p>
           </div>
         </section>

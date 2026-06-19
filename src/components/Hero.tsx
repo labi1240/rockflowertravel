@@ -14,7 +14,7 @@ export default function Hero() {
         loop
         muted
         playsInline
-        preload="auto"
+        preload="none"
         poster="/images/hero_banner.png"
         aria-hidden="true"
         className="absolute inset-0 -z-10 size-full object-cover"

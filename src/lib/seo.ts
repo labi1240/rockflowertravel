@@ -18,7 +18,8 @@ export const SITE = {
     "Premium daily shuttle service connecting Banff, Lake Louise, and Moraine Lake.",
   description:
     "Book premium daily shuttle services between Banff, Lake Louise Village (Samson Mall), Lake Louise Lakeshore, and Moraine Lake. Reserve the 4:30 AM Sunrise Express or a Daytime Circuit seat in seconds.",
-  email: "info@rockflowertravels.ca",
+  email: "rockflowertravels@gmail.com",
+  phone: "+1 (437) 990-3860",
   locale: "en_CA",
   twitter: "@rockflowertravels",
   keywords: [
@@ -62,6 +63,7 @@ export const organizationSchema = {
   logo: LOGO_URL,
   image: LOGO_URL,
   email: SITE.email,
+  telephone: SITE.phone,
   description: SITE.shortDescription,
   priceRange: "$$",
   areaServed: [

@@ -19,7 +19,7 @@
 //  are still present — Google will index the placeholder text.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SUPPORT_EMAIL = 'hello@rockflowertravels.ca'; // TODO: confirm support email
+const SUPPORT_EMAIL = 'rockflowertravels@gmail.com';
 const TOTAL_QUESTIONS = 17;
 
 export default function Faq() {
