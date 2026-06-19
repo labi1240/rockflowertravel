@@ -455,7 +455,7 @@ export default function BookingModal() {
                         id="modal-phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+1 (403) 555-0100"
+                        placeholder="+1 (437) 990-3860"
                         className={INPUT_CLASS}
                         required
                       />
