@@ -20,6 +20,8 @@
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
+    "@arcjet/inspect": "^1.5.0",
+    "@arcjet/next": "^1.5.0",
     "@payloadcms/db-postgres": "3.85.0",
     "@payloadcms/email-nodemailer": "3.85.0",
     "@payloadcms/next": "3.85.0",
