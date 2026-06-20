@@ -8,6 +8,8 @@ import { getActiveFares } from '@/lib/fares-db'
 import type { FareDTO } from '@/lib/fares'
 import { SITE, organizationSchema, websiteSchema } from '@/lib/seo'
 import JsonLd from '@/components/JsonLd'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -89,12 +91,18 @@ export default async function FrontendLayout({ children }: { children: React.Rea
   const nowMs = requestNowMs()
 
   return (
-    <html lang="en" className={cn(outfit.variable, plusJakarta.variable, 'font-sans', geist.variable)}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={cn(outfit.variable, plusJakarta.variable, 'font-sans', geist.variable)}
+    >
       <body>
         <JsonLd schema={[organizationSchema, websiteSchema]} />
         <FaresProvider fares={fares} nowMs={nowMs}>
           {children}
         </FaresProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
