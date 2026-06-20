@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { slidingWindow, validateEmail } from '@arcjet/next'
+import { aj } from '@/lib/arcjet'
 import { stripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { getFareBySlug } from '@/lib/fares-db'
@@ -50,6 +52,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', issues: parsed.error.issues }, { status: 400 })
     }
     const { route, date, time, passengers, name, email, phone, selectedAddOns } = parsed.data
+
+    // Arcjet (DRY_RUN — observe before enforcing on live checkout). Rate-limit
+    // per IP + reject disposable/invalid emails before we touch Stripe or the DB.
+    // While rules are in DRY_RUN, isDenied() is always false, so these branches
+    // are inert until the rules are promoted to LIVE.
+    const decision = await aj
+      .withRule(slidingWindow({ mode: 'DRY_RUN', interval: '60s', max: 10 }))
+      .withRule(validateEmail({ mode: 'DRY_RUN', deny: ['DISPOSABLE', 'INVALID', 'NO_MX_RECORDS'] }))
+      .protect(req, { email })
+    if (decision.isDenied()) {
+      if (decision.reason.isEmail()) {
+        return NextResponse.json({ error: 'Please use a valid, non-disposable email address.' }, { status: 400 })
+      }
+      if (decision.reason.isRateLimit()) {
+        return NextResponse.json({ error: 'Too many booking attempts — please wait a minute.' }, { status: 429 })
+      }
+      return NextResponse.json({ error: 'Request blocked.' }, { status: 403 })
+    }
 
     const payload = await getPayloadClient()
 

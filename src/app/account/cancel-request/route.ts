@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { slidingWindow } from '@arcjet/next'
+import { aj } from '@/lib/arcjet'
 import { getPayloadClient } from '@/lib/payload'
 import { sendCancellationRequestToStaff } from '@/lib/email'
 
@@ -14,6 +16,15 @@ const InputSchema = z.object({
 // the booking and emails support; staff review and refund via the admin. Auth required.
 export async function POST(req: NextRequest) {
   try {
+    // Arcjet (DRY_RUN — observe before enforcing). Rate-limit per IP to stop
+    // abuse of this authenticated endpoint. Inert until rules are promoted.
+    const decision = await aj
+      .withRule(slidingWindow({ mode: 'DRY_RUN', interval: '60s', max: 5 }))
+      .protect(req)
+    if (decision.isDenied()) {
+      return NextResponse.json({ error: 'Too many requests — please wait a minute.' }, { status: 429 })
+    }
+
     const payload = await getPayloadClient()
 
     const { user } = await payload.auth({ headers: req.headers })
