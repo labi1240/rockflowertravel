@@ -10,7 +10,10 @@ const msOrNull = (v?: string | null): number | null => (v ? new Date(v).getTime(
 function resolveRouteSlug(row: Fare): string | null {
   const r = row.route
   if (r && typeof r === 'object') return (r as Route).slug ?? null
-  return row.routeKind ?? null
+  if (row.routeKind) {
+    return row.routeKind.toLowerCase().replace(/_/g, '-')
+  }
+  return null
 }
 
 const mediaUrl = (v: unknown): string | null =>

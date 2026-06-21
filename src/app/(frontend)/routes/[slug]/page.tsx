@@ -8,7 +8,7 @@ import BookingModal from '@/components/BookingModal'
 import ServiceBookButton from '@/components/ServiceBookButton'
 import JsonLd from '@/components/JsonLd'
 import { getPayloadClient } from '@/lib/payload'
-import { getFareBySlug } from '@/lib/fares-db'
+import { getActiveFares } from '@/lib/fares-db'
 import { quote, formatCents, type FareDTO, isSaleActive } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
 import { requestNowMs } from '@/lib/utils'
@@ -28,8 +28,9 @@ const stopName = (s: number | Stop | null | undefined) =>
   s && typeof s === 'object' ? s.name : '—'
 
 async function loadRouteData(slug: string) {
-  const fare = await getFareBySlug(slug)
-  if (!fare || !fare.active) return null
+  const allFares = await getActiveFares()
+  const fare = allFares.find((f) => f.id === slug && f.active) || null
+  if (!fare) return null
   const payload = await getPayloadClient()
 
   let route: Route | null = null

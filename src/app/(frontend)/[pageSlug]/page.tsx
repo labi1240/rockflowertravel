@@ -13,7 +13,7 @@ import RelatedRoutes from '@/components/landing/RelatedRoutes'
 import { Stars } from '@/components/landing/icons'
 import { resolveMedia, type ResolvedImage } from '@/components/landing/media'
 import { getPayloadClient } from '@/lib/payload'
-import { getFaresByRouteSlug, getLandingCards, type LandingCard } from '@/lib/fares-db'
+import { getActiveFares, getLandingCards, type LandingCard } from '@/lib/fares-db'
 import { formatCents, type FareDTO, effectiveUnitPrice } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
 import { requestNowMs } from '@/lib/utils'
@@ -41,10 +41,16 @@ async function loadLanding(
   })
   const route = docs[0]
   if (!route) return null
-  const [fares, related] = await Promise.all([
-    getFaresByRouteSlug(route.slug),
+  const [allFares, related] = await Promise.all([
+    getActiveFares(),
     getLandingCards(route.slug),
   ])
+  const fares = allFares
+    .filter((f) => f.routeSlug === route.slug)
+    .sort((a, b) => {
+      if (a.priceCents !== b.priceCents) return a.priceCents - b.priceCents
+      return a.sortOrder - b.sortOrder
+    })
   return { route, fares, related }
 }
 
