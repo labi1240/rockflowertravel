@@ -9,7 +9,7 @@ import ServiceBookButton from '@/components/ServiceBookButton'
 import JsonLd from '@/components/JsonLd'
 import { getPayloadClient } from '@/lib/payload'
 import { getFareBySlug } from '@/lib/fares-db'
-import { quote, formatCents, type FareDTO } from '@/lib/fares'
+import { quote, formatCents, type FareDTO, isSaleActive } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
 import { requestNowMs } from '@/lib/utils'
 import type { Route, ScheduleTemplate, Stop } from '@/payload-types'
@@ -66,7 +66,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-function productSchema(fare: FareDTO) {
+function productSchema(fare: FareDTO, nowMs: number) {
+  const price = fare.salePriceCents != null && isSaleActive(fare, nowMs) ? fare.salePriceCents : fare.priceCents
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -76,7 +77,7 @@ function productSchema(fare: FareDTO) {
     brand: { '@type': 'Brand', name: SITE.name },
     offers: {
       '@type': 'Offer',
-      price: (fare.priceCents / 100).toFixed(2),
+      price: (price / 100).toFixed(2),
       priceCurrency: 'CAD',
       availability: 'https://schema.org/InStock',
       url: absoluteUrl(`/routes/${fare.id}`),
@@ -110,7 +111,7 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <>
-      <JsonLd schema={productSchema(fare)} />
+      <JsonLd schema={productSchema(fare, requestNowMs())} />
       <Navbar />
 
       <main className="main-content bg-mist-50">
@@ -138,7 +139,12 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ sl
                   <p className="mt-2 text-lg text-mist-700">{fare.origin} → {fare.destination}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="font-display text-3xl font-bold text-evergreen-800">{formatCents(fare.priceCents)}</div>
+                  <div className="flex items-baseline justify-end gap-2">
+                    <span className="font-display text-3xl font-bold text-evergreen-800">{formatCents(q.unitPriceCents)}</span>
+                    {q.onSale && (
+                      <span className="text-sm text-mist-400 line-through tabular-nums">{formatCents(q.originalUnitPriceCents)}</span>
+                    )}
+                  </div>
                   <div className="text-xs uppercase tracking-wider text-mist-500">per seat + 5% GST</div>
                   <div className="mt-3"><ServiceBookButton route={fare.id} variant="gold">Book now</ServiceBookButton></div>
                 </div>
@@ -204,7 +210,19 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ sl
               <div className="sticky top-24 rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] ring-1 ring-mist-200">
                 <h3 className="font-display text-lg font-bold text-mist-900">Fare breakdown</h3>
                 <dl className="mt-4 space-y-2 text-sm">
-                  <div className="flex justify-between"><dt className="text-mist-500">Base fare</dt><dd className="tabular-nums">{formatCents(fare.priceCents)}</dd></div>
+                  <div className="flex justify-between">
+                    <dt className="text-mist-500">Base fare</dt>
+                    <dd className="tabular-nums">
+                      {q.onSale ? (
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-mist-400 line-through">{formatCents(q.originalUnitPriceCents)}</span>
+                          <span>{formatCents(q.unitPriceCents)}</span>
+                        </span>
+                      ) : (
+                        formatCents(q.unitPriceCents)
+                      )}
+                    </dd>
+                  </div>
                   {fare.tollCents > 0 && <div className="flex justify-between"><dt className="text-mist-500">Moraine toll</dt><dd className="tabular-nums">{formatCents(fare.tollCents)}</dd></div>}
                   <div className="flex justify-between"><dt className="text-mist-500">GST (5%)</dt><dd className="tabular-nums">{formatCents(q.gstCents)}</dd></div>
                   <div className="flex justify-between border-t border-mist-200 pt-2 font-display text-base font-bold text-mist-900"><dt>Total / seat</dt><dd className="tabular-nums">{formatCents(q.totalCents)}</dd></div>

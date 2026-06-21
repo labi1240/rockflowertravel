@@ -9,12 +9,18 @@ import { quote, formatCents, type FareDTO } from '@/lib/fares'
 export default function BookingCard({ fares, nowMs }: { fares: FareDTO[]; nowMs: number }) {
   if (fares.length === 0) return null
   const min = fares[0]
+  const minQ = quote(min, 1, nowMs)
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[var(--shadow-elevated)] ring-1 ring-mist-200 sm:p-6">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-mist-500">From</span>
-        <span className="font-display text-3xl font-bold text-evergreen-800">{formatCents(min.priceCents)}</span>
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-3xl font-bold text-evergreen-800">{formatCents(minQ.unitPriceCents)}</span>
+          {minQ.onSale && (
+            <span className="text-sm text-mist-400 line-through tabular-nums">{formatCents(minQ.originalUnitPriceCents)}</span>
+          )}
+        </div>
       </div>
       <p className="mt-0.5 text-right text-xs text-mist-500">per seat + 5% GST</p>
 
@@ -29,7 +35,12 @@ export default function BookingCard({ fares, nowMs }: { fares: FareDTO[]; nowMs:
                   <p className="mt-0.5 text-xs text-mist-500">Departs {f.defaultTime}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="font-display text-base font-bold text-mist-900">{formatCents(f.priceCents)}</div>
+                  <div className="flex items-baseline justify-end gap-1.5">
+                    <span className="font-display text-base font-bold text-mist-900">{formatCents(q.unitPriceCents)}</span>
+                    {q.onSale && (
+                      <span className="text-xs text-mist-400 line-through tabular-nums">{formatCents(q.originalUnitPriceCents)}</span>
+                    )}
+                  </div>
                   <div className="text-[10px] uppercase tracking-wide text-mist-400">{formatCents(q.totalCents)} total</div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { getPayloadClient } from '@/lib/payload'
-import type { FareDTO, FareTier } from '@/lib/fares'
+import { effectiveUnitPrice, type FareDTO, type FareTier } from '@/lib/fares'
 import type { Fare, Route } from '@/payload-types'
 
 const msOrNull = (v?: string | null): number | null => (v ? new Date(v).getTime() : null)
@@ -138,13 +138,18 @@ export async function getLandingCards(excludeSlug?: string): Promise<LandingCard
       .filter((r) => r.seoSlug && r.slug !== excludeSlug)
       .map(async (r): Promise<LandingCard> => {
         const fares = await getFaresByRouteSlug(r.slug)
+        const nowMs = Date.now()
+        let minPriceCents: number | null = null
+        if (fares.length > 0) {
+          minPriceCents = Math.min(...fares.map((f) => effectiveUnitPrice(f, nowMs)))
+        }
         return {
           seoSlug: r.seoSlug as string,
           displayName: r.displayName,
           tier: r.tier,
           isPremium: Boolean(r.isPremium),
           imageUrl: mediaUrl(r.heroImage),
-          minPriceCents: fares[0]?.priceCents ?? null,
+          minPriceCents,
         }
       }),
   )

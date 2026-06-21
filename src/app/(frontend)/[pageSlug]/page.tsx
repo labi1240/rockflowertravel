@@ -14,7 +14,7 @@ import { Stars } from '@/components/landing/icons'
 import { resolveMedia, type ResolvedImage } from '@/components/landing/media'
 import { getPayloadClient } from '@/lib/payload'
 import { getFaresByRouteSlug, getLandingCards, type LandingCard } from '@/lib/fares-db'
-import { formatCents, type FareDTO } from '@/lib/fares'
+import { formatCents, type FareDTO, effectiveUnitPrice } from '@/lib/fares'
 import { SITE, absoluteUrl } from '@/lib/seo'
 import { requestNowMs } from '@/lib/utils'
 import type { Route } from '@/payload-types'
@@ -73,7 +73,8 @@ export async function generateMetadata({ params }: { params: Promise<{ pageSlug:
   if (!data) return { title: 'Page not found' }
   const { route, fares } = data
   const title = route.seo?.metaTitle || `${route.displayName} | ${SITE.name}`
-  const minPrice = fares[0]?.priceCents
+  const nowMs = requestNowMs()
+  const minPrice = fares[0] ? effectiveUnitPrice(fares[0], nowMs) : null
   const description =
     route.seo?.metaDescription ||
     route.description ||
@@ -95,13 +96,13 @@ export async function generateMetadata({ params }: { params: Promise<{ pageSlug:
   }
 }
 
-function buildSchema(route: Route, pageSlug: string, fares: FareDTO[]) {
+function buildSchema(route: Route, pageSlug: string, fares: FareDTO[], nowMs: number) {
   const url = absoluteUrl(`/${pageSlug}`)
   const img = resolveMedia(route.seo?.ogImage) ?? resolveMedia(route.heroImage)
   const offers = fares.map((f) => ({
     '@type': 'Offer',
     name: f.label,
-    price: (f.priceCents / 100).toFixed(2),
+    price: (effectiveUnitPrice(f, nowMs) / 100).toFixed(2),
     priceCurrency: 'CAD',
     availability: 'https://schema.org/InStock',
     url,
@@ -160,7 +161,7 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
   const nowMs = requestNowMs()
   const heroImages = collectHeroImages(route)
   const defaultFare = fares[0] ?? null
-  const minPrice = defaultFare?.priceCents
+  const minPrice = defaultFare ? effectiveUnitPrice(defaultFare, nowMs) : null
   const badge = route.hero?.badge || (route.isPremium ? 'Premium service' : 'Daily shuttle')
   const headline = route.hero?.headline || route.displayName
   const subheadline = route.hero?.subheadline || route.description || ''
@@ -184,7 +185,7 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
 
   return (
     <>
-      <JsonLd schema={buildSchema(route, pageSlug, fares)} />
+      <JsonLd schema={buildSchema(route, pageSlug, fares, nowMs)} />
       <Navbar />
 
       <main className="main-content bg-mist-50">
