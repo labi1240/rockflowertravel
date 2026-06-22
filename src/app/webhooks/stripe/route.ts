@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
             seats: confirmed.seats,
             totalCents: confirmed.totalCents,
             currency: confirmed.currency,
+            name: [confirmed.guestFirstName, confirmed.guestLastName].filter(Boolean).join(' ') || undefined,
           })
           
           await notifyStaffOfNewBooking({
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
             seats: confirmed.seats,
             totalCents: confirmed.totalCents,
             currency: confirmed.currency,
+            name: [confirmed.guestFirstName, confirmed.guestLastName].filter(Boolean).join(' ') || undefined,
           })
         }
         // Give guest bookings an account (or claim an existing one) so the trip appears

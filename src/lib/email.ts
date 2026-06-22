@@ -9,6 +9,7 @@ const FROM = process.env.EMAIL_FROM || 'RockFlower Travels <onboarding@resend.de
 
 export interface ConfirmationData {
   reference: string
+  name?: string | null
   email: string
   routeName?: string | null
   serviceDate?: string | null
@@ -36,20 +37,79 @@ export async function sendBookingConfirmation(b: ConfirmationData): Promise<void
   if (!b.email) return
 
   const url = absoluteUrl(`/my-trips/${b.reference}`)
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`
+
   const html = `
-  <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#211b16">
-    <h1 style="font-size:22px;color:#114b3b;margin:0 0 4px">Booking confirmed 🎉</h1>
-    <p style="color:#6b5d50;margin:0 0 20px">Thanks for riding with ${SITE.name}.</p>
-    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e7e0d6;border-radius:12px;overflow:hidden">
-      <tr><td style="padding:12px 16px;color:#8a7c6d;font-size:13px">Reference</td><td style="padding:12px 16px;text-align:right;font-weight:700">${b.reference}</td></tr>
-      <tr><td style="padding:12px 16px;color:#8a7c6d;font-size:13px;border-top:1px solid #f0ebe3">Route</td><td style="padding:12px 16px;text-align:right;border-top:1px solid #f0ebe3">${b.routeName ?? 'Shuttle'}</td></tr>
-      <tr><td style="padding:12px 16px;color:#8a7c6d;font-size:13px;border-top:1px solid #f0ebe3">Date</td><td style="padding:12px 16px;text-align:right;border-top:1px solid #f0ebe3">${fmtDate(b.serviceDate)}</td></tr>
-      <tr><td style="padding:12px 16px;color:#8a7c6d;font-size:13px;border-top:1px solid #f0ebe3">Departure</td><td style="padding:12px 16px;text-align:right;border-top:1px solid #f0ebe3">${b.departureTime ?? '—'}</td></tr>
-      <tr><td style="padding:12px 16px;color:#8a7c6d;font-size:13px;border-top:1px solid #f0ebe3">Seats</td><td style="padding:12px 16px;text-align:right;border-top:1px solid #f0ebe3">${b.seats ?? 1}</td></tr>
-      <tr><td style="padding:12px 16px;color:#8a7c6d;font-size:13px;border-top:1px solid #f0ebe3">Total paid</td><td style="padding:12px 16px;text-align:right;font-weight:700;border-top:1px solid #f0ebe3">${fmtCAD(b.totalCents, b.currency ?? 'CAD')}</td></tr>
-    </table>
-    <a href="${url}" style="display:inline-block;margin:24px 0;background:#e8a13a;color:#0f2a20;text-decoration:none;font-weight:700;padding:14px 24px;border-radius:12px">View your boarding pass →</a>
-    <p style="color:#8a7c6d;font-size:12px;margin-top:8px">Please arrive 10 minutes early; buses depart on time.</p>
+  <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:500px;margin:0 auto;color:#211b16;padding:20px;background:#f5f4f0;">
+    <div style="background:#faf9f5;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.05);border:1px solid #e7e0d6;">
+      
+      <!-- Header -->
+      <div style="padding:16px 24px;border-bottom:1px solid #f0ebe3;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:bold;letter-spacing:0.1em;color:#114b3b;text-transform:uppercase;">🌸 RockFlower Travels</span>
+        <span style="background:#fceacc;color:#bc6a00;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;">Boarding Pass</span>
+      </div>
+
+      <!-- Details -->
+      <div style="padding:24px;">
+        <div style="margin-bottom:20px;">
+          <p style="margin:0;font-size:20px;font-weight:800;color:#211b16;">${b.name || 'Passenger'}</p>
+          <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Passenger</p>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <p style="margin:0;font-size:15px;font-weight:700;color:#211b16;">${b.routeName ?? 'Shuttle'}</p>
+          <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Route</p>
+        </div>
+
+        <table style="width:100%;margin-bottom:24px;border-collapse:collapse;">
+          <tr>
+            <td style="width:40%;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#211b16;">${fmtDate(b.serviceDate)}</p>
+              <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Date</p>
+            </td>
+            <td style="width:40%;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#bc6a00;">${b.departureTime ?? '—'}</p>
+              <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Departs</p>
+            </td>
+            <td style="width:20%;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#211b16;">${b.seats ?? 1}</p>
+              <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Pax</p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Dashed Divider -->
+        <div style="border-top:1px dashed #d1c8b9;margin:24px 0;"></div>
+
+        <table style="width:100%;margin-bottom:24px;border-collapse:collapse;">
+          <tr>
+            <td>
+              <p style="margin:0;font-size:14px;font-weight:bold;letter-spacing:0.1em;color:#bc6a00;font-family:monospace;">${b.reference}</p>
+              <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Reference</p>
+            </td>
+            <td style="text-align:right;">
+              <p style="margin:0;font-size:15px;font-weight:800;color:#211b16;">${fmtCAD(b.totalCents, b.currency ?? 'CAD')}</p>
+              <p style="margin:4px 0 0;font-size:10px;font-weight:600;letter-spacing:0.15em;color:#8a7c6d;text-transform:uppercase;">Paid · ${b.currency?.toUpperCase() || 'CAD'}</p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- QR Code -->
+        <div style="text-align:center;background:#fff;padding:16px;border-radius:12px;border:1px solid #e7e0d6;margin-bottom:16px;">
+          <img src="${qrUrl}" alt="QR Code" width="150" height="150" style="display:block;margin:0 auto;" />
+          <p style="margin:12px 0 4px;font-size:10px;font-weight:bold;letter-spacing:0.2em;color:#8a7c6d;font-family:monospace;">${b.reference}</p>
+          <p style="margin:0;font-size:10px;color:#8a7c6d;">Scan to view your live booking</p>
+        </div>
+
+        <p style="margin:0;font-size:12px;color:#6b5d50;text-align:center;line-height:1.5;">
+          Arrive <strong style="color:#211b16;">10 minutes</strong> before departure and present this pass to the driver.
+        </p>
+
+        <div style="text-align:center;margin-top:24px;">
+          <a href="${url}" style="display:inline-block;background:#e8a13a;color:#0f2a20;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;font-size:14px;">Open Online Pass →</a>
+        </div>
+      </div>
+    </div>
   </div>`
 
   try {
