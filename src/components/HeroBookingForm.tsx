@@ -7,7 +7,7 @@ import { useFares } from '@/components/FaresProvider';
 
 export default function HeroBookingForm() {
   const openBooking = useBookingModal((s) => s.open);
-  const { byTier, getFare, nowMs } = useFares();
+  const { byTier, getFare, nowMs, pauseBookings } = useFares();
   // Derive the initial selection from the live catalog so we never preselect a fare id
   // that's been deactivated/removed. Falls back to the first fare in tier order.
   const firstFareId = TIERS.map((t) => byTier[t.key]?.[0]?.id).find(Boolean) ?? '';
@@ -92,9 +92,10 @@ export default function HeroBookingForm() {
 
         <button
           type="submit"
-          className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sunrise-500 px-6 py-4 font-display text-base font-bold text-evergreen-950 shadow-[var(--shadow-glow-sunrise)] transition hover:bg-sunrise-400 focus:outline-none focus:ring-2 focus:ring-sunrise-500 focus:ring-offset-2 focus:ring-offset-mist-50"
+          disabled={pauseBookings}
+          className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sunrise-500 px-6 py-4 font-display text-base font-bold text-evergreen-950 shadow-[var(--shadow-glow-sunrise)] transition hover:bg-sunrise-400 focus:outline-none focus:ring-2 focus:ring-sunrise-500 focus:ring-offset-2 focus:ring-offset-mist-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Find availability &amp; book
+          {pauseBookings ? 'Bookings temporarily paused' : 'Find availability & book'}
           <span aria-hidden>→</span>
         </button>
 

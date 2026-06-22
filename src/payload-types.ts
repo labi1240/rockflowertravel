@@ -108,8 +108,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'booking-settings': BookingSetting;
+  };
+  globalsSelect: {
+    'booking-settings': BookingSettingsSelect<false> | BookingSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -1473,6 +1477,34 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking-settings".
+ */
+export interface BookingSetting {
+  id: number;
+  /**
+   * Toggle this on to temporarily disable checkout/bookings across the entire website.
+   */
+  pauseBookings?: boolean | null;
+  /**
+   * Message shown to users on the booking form/modal when bookings are paused.
+   */
+  pauseMessage?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "booking-settings_select".
+ */
+export interface BookingSettingsSelect<T extends boolean = true> {
+  pauseBookings?: T;
+  pauseMessage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

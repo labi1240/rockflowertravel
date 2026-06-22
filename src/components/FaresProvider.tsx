@@ -17,6 +17,8 @@ interface FaresContextValue {
   /** Default fare id to preselect per tier (lowest sortOrder). */
   tierDefault: Record<FareTier, string | undefined>;
   getFare: (id: string) => FareDTO | undefined;
+  pauseBookings: boolean;
+  pauseMessage: string | null;
 }
 
 const FaresContext = createContext<FaresContextValue | null>(null);
@@ -26,10 +28,14 @@ const TIER_KEYS: FareTier[] = ['sunrise', 'daytime', 'evening'];
 export function FaresProvider({
   fares,
   nowMs,
+  pauseBookings = false,
+  pauseMessage = null,
   children,
 }: {
   fares: FareDTO[];
   nowMs: number;
+  pauseBookings?: boolean;
+  pauseMessage?: string | null;
   children: ReactNode;
 }) {
   const value = useMemo<FaresContextValue>(() => {
@@ -57,8 +63,10 @@ export function FaresProvider({
       tierFrom,
       tierDefault,
       getFare: (id: string) => index.get(id),
+      pauseBookings,
+      pauseMessage,
     };
-  }, [fares, nowMs]);
+  }, [fares, nowMs, pauseBookings, pauseMessage]);
 
   return <FaresContext.Provider value={value}>{children}</FaresContext.Provider>;
 }

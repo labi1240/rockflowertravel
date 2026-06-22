@@ -69,7 +69,7 @@ export default function BookingModal() {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>('');
 
-  const { fares, byTier, nowMs, getFare } = useFares();
+  const { fares, byTier, nowMs, getFare, pauseBookings, pauseMessage } = useFares();
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -265,7 +265,36 @@ export default function BookingModal() {
 
         {/* Internal scroll region: content scrolls here while the panel (and its close button) stay fixed. */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-        {step < 4 ? (
+        {pauseBookings ? (
+          <div className="flex min-h-full flex-col items-center justify-center p-8 text-center sm:p-12">
+            <span className="grid size-16 place-items-center rounded-full bg-sunrise-100 text-sunrise-700 shadow-sm ring-8 ring-sunrise-50">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-8">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+            <h2 className="mt-6 font-display text-2xl font-extrabold tracking-tight text-evergreen-800 sm:text-3xl">
+              Bookings are paused
+            </h2>
+            <p className="mt-4 max-w-md text-base leading-relaxed text-mist-600">
+              {pauseMessage || 'New checkouts are temporarily suspended. Please try again later.'}
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center">
+              <button
+                onClick={handleClose}
+                className="inline-flex items-center justify-center rounded-xl bg-evergreen-700 px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-evergreen-850"
+              >
+                Close Window
+              </button>
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-xl border border-mist-300 bg-white px-5 py-3 text-sm font-semibold text-mist-700 shadow-sm transition hover:bg-mist-50 hover:text-mist-900"
+              >
+                Contact Support
+              </a>
+            </div>
+          </div>
+        ) : step < 4 ? (
           <div className="grid min-h-full grid-cols-1 lg:grid-cols-[1.35fr_1fr]">
             {/* Form column */}
             <div className="bg-white">

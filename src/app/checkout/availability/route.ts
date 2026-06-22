@@ -34,6 +34,12 @@ export async function GET(req: NextRequest) {
   const { route, date, time, times } = parsed.data
 
   try {
+    const { getBookingSettings } = await import('@/lib/settings')
+    const settings = await getBookingSettings()
+    if (settings.pauseBookings) {
+      return NextResponse.json({ error: 'Bookings are temporarily suspended.' }, { status: 403 })
+    }
+
     const fare = await getFareBySlug(route)
     if (!fare || !fare.active) {
       return NextResponse.json({ error: 'Invalid route' }, { status: 400 })
