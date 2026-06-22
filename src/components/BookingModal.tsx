@@ -54,7 +54,13 @@ export default function BookingModal() {
   const [step, setStep] = useState<Step>(1);
   const [route, setRoute] = useState<FareId>('daytime-samson-ll');
   const [time, setTime] = useState<string>('');
-  const [date, setDate] = useState<string>('2026-05-21');
+  // nowMs is stable from context, so we can use it to derive today's date without hydration mismatch
+  const { fares, byTier, nowMs, getFare, pauseBookings, pauseMessage } = useFares();
+  
+  const todayStr = new Date(nowMs).toISOString().split('T')[0];
+  const minDateStr = todayStr < '2026-06-25' ? '2026-06-25' : todayStr;
+
+  const [date, setDate] = useState<string>(() => minDateStr);
   const [passengers, setPassengers] = useState<number>(1);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   // Seats remaining per departure time for the selected route+date (drives the slot
@@ -69,7 +75,6 @@ export default function BookingModal() {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>('');
 
-  const { fares, byTier, nowMs, getFare, pauseBookings, pauseMessage } = useFares();
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -339,9 +344,14 @@ export default function BookingModal() {
                           id="modal-date"
                           value={date}
                           onChange={(e) => setDate(e.target.value)}
-                          min="2026-05-03"
+                          min={minDateStr}
                           className={INPUT_CLASS}
                         />
+                        {minDateStr === '2026-06-25' && (
+                          <p className="mt-1.5 text-xs font-semibold text-red-600">
+                            Note: All departures before June 25th are completely sold out.
+                          </p>
+                        )}
                       </Field>
                       <Field label="Passengers" htmlFor="modal-pax">
                         <Select id="modal-pax" value={String(passengers)} onChange={(v) => setPassengers(parseInt(v))}>

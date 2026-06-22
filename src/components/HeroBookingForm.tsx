@@ -12,7 +12,10 @@ export default function HeroBookingForm() {
   // that's been deactivated/removed. Falls back to the first fare in tier order.
   const firstFareId = TIERS.map((t) => byTier[t.key]?.[0]?.id).find(Boolean) ?? '';
   const [selectedRoute, setSelectedRoute] = useState<BookingRouteId>(firstFareId);
-  const [date, setDate] = useState('2026-05-21');
+
+  const todayStr = new Date(nowMs).toISOString().split('T')[0];
+  const minDateStr = todayStr < '2026-06-25' ? '2026-06-25' : todayStr;
+  const [date, setDate] = useState(() => minDateStr);
   const [passengers, setPassengers] = useState(1);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,8 +72,13 @@ export default function HeroBookingForm() {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full rounded-xl border border-mist-200 bg-white px-4 py-3.5 text-base font-medium text-mist-900 outline-none transition focus:border-evergreen-500 focus:bg-white focus:ring-2 focus:ring-evergreen-500/25"
-                min="2026-05-03"
+                min={minDateStr}
               />
+              {minDateStr === '2026-06-25' && (
+                <p className="mt-1.5 text-[11px] font-semibold text-red-600">
+                  Note: All departures before June 25th are completely sold out.
+                </p>
+              )}
             </Field>
 
             <Field label="Passengers" htmlFor="passengers-input">
