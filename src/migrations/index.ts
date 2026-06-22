@@ -5,6 +5,7 @@ import * as migration_20260607_050729_add_uploadthing_media_fields from './20260
 import * as migration_20260607_075943_add_messages from './20260607_075943_add_messages';
 import * as migration_20260614_172433_add_fare_booking_addons from './20260614_172433_add_fare_booking_addons';
 import * as migration_20260615_221731_add_booking_cancellation_request from './20260615_221731_add_booking_cancellation_request';
+import * as migration_20260622_011437_add_booking_settings from './20260622_011437_add_booking_settings';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20260615_221731_add_booking_cancellation_request.up,
     down: migration_20260615_221731_add_booking_cancellation_request.down,
-    name: '20260615_221731_add_booking_cancellation_request'
+    name: '20260615_221731_add_booking_cancellation_request',
+  },
+  {
+    up: migration_20260622_011437_add_booking_settings.up,
+    down: migration_20260622_011437_add_booking_settings.down,
+    name: '20260622_011437_add_booking_settings'
   },
 ];
