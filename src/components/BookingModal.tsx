@@ -348,9 +348,14 @@ export default function BookingModal() {
                           className={INPUT_CLASS}
                         />
                         {minDateStr === '2026-06-25' && (
-                          <p className="mt-1.5 text-xs font-semibold text-red-600">
-                            Note: All departures before June 25th are completely sold out.
-                          </p>
+                          <div className="mt-2.5 flex items-start gap-3 rounded-xl bg-sunrise-50 p-3.5 ring-1 ring-sunrise-500/30">
+                            <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-sunrise-100 text-sunrise-700">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                            </span>
+                            <p className="text-xs leading-relaxed text-sunrise-900">
+                              Due to high demand, all dates before <strong className="font-bold">June 25th</strong> are fully booked.
+                            </p>
+                          </div>
                         )}
                       </Field>
                       <Field label="Passengers" htmlFor="modal-pax">
