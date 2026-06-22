@@ -74,16 +74,6 @@ export default function HeroBookingForm() {
                 className="w-full rounded-xl border border-mist-200 bg-white px-4 py-3.5 text-base font-medium text-mist-900 outline-none transition focus:border-evergreen-500 focus:bg-white focus:ring-2 focus:ring-evergreen-500/25"
                 min={minDateStr}
               />
-              {minDateStr === '2026-06-25' && (
-                <div className="mt-2.5 flex items-start gap-3 rounded-xl bg-sunrise-50 p-3.5 ring-1 ring-sunrise-500/30">
-                  <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-sunrise-100 text-sunrise-700">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-                  </span>
-                  <p className="text-xs leading-relaxed text-sunrise-900">
-                    Due to high demand, all dates before <strong className="font-bold">June 25th</strong> are fully booked.
-                  </p>
-                </div>
-              )}
             </Field>
 
             <Field label="Passengers" htmlFor="passengers-input">
@@ -101,6 +91,17 @@ export default function HeroBookingForm() {
               </select>
             </Field>
           </div>
+
+          {minDateStr === '2026-06-25' && (
+            <div className="flex items-center gap-2.5 rounded-xl bg-sunrise-50 px-4 py-3 ring-1 ring-sunrise-500/30">
+              <span aria-hidden className="grid size-5 shrink-0 place-items-center rounded-full bg-sunrise-100 text-sunrise-700">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="size-3"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+              </span>
+              <p className="text-[12px] leading-tight text-sunrise-900">
+                Due to high demand, all dates before <strong className="font-bold">June 25th</strong> are fully booked.
+              </p>
+            </div>
+          )}
         </div>
 
         <button
