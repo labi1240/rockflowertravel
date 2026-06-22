@@ -3,7 +3,7 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { releaseDepartureSeats } from '@/lib/inventory'
-import { sendBookingConfirmation } from '@/lib/email'
+import { sendBookingConfirmation, notifyStaffOfNewBooking } from '@/lib/email'
 import { provisionCustomerForBooking } from '@/lib/customer-provision'
 
 export const runtime = 'nodejs'
@@ -53,6 +53,18 @@ export async function POST(req: NextRequest) {
         // Fire-and-forget confirmation email (never blocks the webhook ack).
         if (confirmed.guestEmail) {
           await sendBookingConfirmation({
+            reference: confirmed.reference,
+            email: confirmed.guestEmail,
+            routeName: confirmed.routeName,
+            serviceDate: confirmed.serviceDate,
+            departureTime: confirmed.departureTime,
+            seats: confirmed.seats,
+            totalCents: confirmed.totalCents,
+            currency: confirmed.currency,
+          })
+          
+          await notifyStaffOfNewBooking({
+            bookingId: confirmed.id,
             reference: confirmed.reference,
             email: confirmed.guestEmail,
             routeName: confirmed.routeName,

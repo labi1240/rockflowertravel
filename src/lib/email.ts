@@ -210,3 +210,37 @@ export async function sendCancellationRequestToStaff(d: {
     console.error('[email] cancellation notice failed', err)
   }
 }
+
+/** Notify staff of a new booking confirmation. Fault-tolerant: never throws. */
+export async function notifyStaffOfNewBooking(b: ConfirmationData & { bookingId: number | string }): Promise<void> {
+  const key = process.env.RESEND_API_KEY
+  const to = process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM
+  if (!key || !to) {
+    console.warn('[email] RESEND_API_KEY or SUPPORT_EMAIL not set — skipping staff booking notification')
+    return
+  }
+
+  const adminUrl = absoluteUrl(`/admin/collections/bookings/${b.bookingId}`)
+  const html = messageCardHtml(
+    'New Booking Confirmed 🎉',
+    `A new booking (${b.reference}) was just confirmed for ${b.routeName || 'a shuttle'}.`,
+    `Date: ${fmtDate(b.serviceDate)}
+Departure: ${b.departureTime || '—'}
+Passengers: ${b.seats || 1}
+Total: ${fmtCAD(b.totalCents, b.currency || 'CAD')}
+Customer: ${b.email}`,
+    adminUrl,
+    'View booking in admin'
+  )
+
+  try {
+    await new Resend(key).emails.send({
+      from: FROM,
+      to,
+      subject: `New Booking Confirmed — ${b.reference} — ${SITE.name}`,
+      html,
+    })
+  } catch (err) {
+    console.error('[email] staff booking notification failed', err)
+  }
+}
