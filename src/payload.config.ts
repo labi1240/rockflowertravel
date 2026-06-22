@@ -19,6 +19,7 @@ import { DepartureInventory } from './collections/DepartureInventory'
 import { Bookings } from './collections/Bookings'
 import { Payments } from './collections/Payments'
 import { Messages } from './collections/Messages'
+import { BookingSettings } from './globals/BookingSettings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -79,6 +80,9 @@ export default buildConfig({
     Messages,
     // System
     Media,
+  ],
+  globals: [
+    BookingSettings,
   ],
   editor: lexicalEditor(),
   // Transactional email (forgot-password, verification, etc.).

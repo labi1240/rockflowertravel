@@ -73,6 +73,16 @@ export async function POST(req: NextRequest) {
 
     const payload = await getPayloadClient()
 
+    // Check if bookings are paused globally
+    const { getBookingSettings } = await import('@/lib/settings')
+    const settings = await getBookingSettings()
+    if (settings.pauseBookings) {
+      return NextResponse.json(
+        { error: settings.pauseMessage || 'Bookings are temporarily suspended.' },
+        { status: 403 },
+      )
+    }
+
     // Server-authoritative pricing — read the fare from the DB and price here.
     const fare = await getFareBySlug(route)
     if (!fare || !fare.active) {

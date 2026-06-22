@@ -10,6 +10,7 @@ import { SITE, organizationSchema, websiteSchema } from '@/lib/seo'
 import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { getBookingSettings } from '@/lib/settings'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -89,6 +90,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
     console.error('[FrontendLayout] failed to load fares', err)
   }
   const nowMs = requestNowMs()
+  const settings = await getBookingSettings()
 
   return (
     <html
@@ -98,7 +100,12 @@ export default async function FrontendLayout({ children }: { children: React.Rea
     >
       <body>
         <JsonLd schema={[organizationSchema, websiteSchema]} />
-        <FaresProvider fares={fares} nowMs={nowMs}>
+        <FaresProvider
+          fares={fares}
+          nowMs={nowMs}
+          pauseBookings={settings.pauseBookings ?? false}
+          pauseMessage={settings.pauseMessage}
+        >
           {children}
         </FaresProvider>
         <Analytics />
