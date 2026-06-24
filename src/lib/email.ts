@@ -142,7 +142,7 @@ export async function notifyStaffOfMessage(m: {
   body: string
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY
-  const to = 'rockflowertravels@gmail.com'
+  const to = 'labi1240@gmail.com'
   if (!key || !to) {
     console.warn('[email] RESEND_API_KEY or SUPPORT_EMAIL not set — skipping support notification')
     return
@@ -246,7 +246,7 @@ export async function sendCancellationRequestToStaff(d: {
   reason?: string | null
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY
-  const to = 'rockflowertravels@gmail.com'
+  const to = 'labi1240@gmail.com'
   if (!key || !to) {
     console.warn('[email] RESEND_API_KEY or SUPPORT_EMAIL not set — skipping cancellation notice')
     return
@@ -274,7 +274,7 @@ export async function sendCancellationRequestToStaff(d: {
 /** Notify staff of a new booking confirmation. Fault-tolerant: never throws. */
 export async function notifyStaffOfNewBooking(b: ConfirmationData & { bookingId: number | string }): Promise<void> {
   const key = process.env.RESEND_API_KEY
-  const to = 'rockflowertravels@gmail.com'
+  const to = 'labi1240@gmail.com'
   if (!key || !to) {
     console.warn('[email] RESEND_API_KEY or SUPPORT_EMAIL not set — skipping staff booking notification')
     return
