@@ -185,6 +185,21 @@ export default function BookingModal() {
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedSlotFull) return; // sold out for this party size — blocked + messaged below
+
+    // Google Tag tracking
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'begin_checkout', {
+        value: total,
+        currency: 'CAD',
+        items: [{
+          item_name: fare?.label ?? 'Shuttle Route',
+          item_id: route,
+          price: perSeat,
+          quantity: passengers
+        }]
+      });
+    }
+
     setStep(2);
   };
 
@@ -211,6 +226,21 @@ export default function BookingModal() {
       setClientSecret(data.clientSecret);
       setTicketRef(data.reference);
       setHoldExpiresAt(data.holdExpiresAt);
+
+      // Google Tag tracking
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'add_payment_info', {
+          value: total,
+          currency: 'CAD',
+          items: [{
+            item_name: fare?.label ?? 'Shuttle Route',
+            item_id: route,
+            price: perSeat,
+            quantity: passengers
+          }]
+        });
+      }
+
       setStep(3);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Could not start payment');
@@ -220,6 +250,20 @@ export default function BookingModal() {
   };
 
   const handlePaymentSuccess = () => {
+    // Google Tag tracking
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'purchase', {
+        transaction_id: ticketRef,
+        value: total,
+        currency: 'CAD',
+        items: [{
+          item_name: fare?.label ?? 'Shuttle Route',
+          item_id: route,
+          price: perSeat,
+          quantity: passengers
+        }]
+      });
+    }
     setStep(4);
   };
 
