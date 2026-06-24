@@ -11,6 +11,7 @@ import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { getBookingSettings } from '@/lib/settings'
+import Script from 'next/script'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -98,6 +99,21 @@ export default async function FrontendLayout({ children }: { children: React.Rea
       data-scroll-behavior="smooth"
       className={cn(outfit.variable, plusJakarta.variable, 'font-sans', geist.variable)}
     >
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18159401358"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-18159401358');
+          `}
+        </Script>
+      </head>
       <body>
         <JsonLd schema={[organizationSchema, websiteSchema]} />
         <FaresProvider
