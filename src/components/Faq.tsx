@@ -20,7 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SUPPORT_EMAIL = 'rockflowertravels@gmail.com';
-const TOTAL_QUESTIONS = 17;
+const TOTAL_QUESTIONS = 18;
 
 export default function Faq() {
   return (
@@ -102,12 +102,20 @@ export default function Faq() {
         </FaqGroup>
 
         {/* Logistics */}
-        <FaqGroup label="Pickup & logistics" count={3} icon={<PinIcon />}>
+        <FaqGroup label="Pickup & logistics" count={4} icon={<PinIcon />}>
           <FaqItem question="Where do I get picked up?">
             <strong>Samson Mall</strong> in Lake Louise Village is the main pickup point for the
             Daytime Circuit — it has food, retail, and restrooms while you wait. Lake Louise
             Lakeshore and Moraine Lake use <strong>designated loading areas</strong>; follow staff
             direction at the stop.
+          </FaqItem>
+          <FaqItem question="Where can I park my vehicle?">
+            <strong>Please plan your parking before you travel — we are unable to provide or
+            guarantee parking.</strong> Parks Canada does <strong>not</strong> permit customer
+            parking at any Parks Canada parking lots, public parking areas, day-use areas, or
+            trailheads at the Lake Louise Lakeshore or Moraine Lake. We recommend leaving your
+            vehicle at your accommodation and reaching your pickup point by local public transit or
+            taxi.
           </FaqItem>
           <FaqItem question="How early should I arrive?">
             <strong>10 minutes before</strong> your scheduled departure. Buses leave on time —

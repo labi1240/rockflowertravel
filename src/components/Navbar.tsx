@@ -46,10 +46,10 @@ export default function Navbar() {
   return (
     <header className={`fixed w-full top-0 z-50 transition-all duration-500 ${
       scrolled
-        ? 'border-b border-mist-200 bg-mist-50/80 shadow-[var(--shadow-card)] backdrop-blur-2xl backdrop-saturate-200 py-1'
-        : 'border-transparent bg-transparent py-4'
+        ? 'border-b border-mist-200 bg-mist-50/95 shadow-[var(--shadow-card)] backdrop-blur-2xl backdrop-saturate-200'
+        : 'border-transparent bg-transparent'
     }`}>
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6">
+      <div className={`mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 ${scrolled ? 'py-1' : 'py-4'}`}>
         <Link
           href="/"
           className="group flex items-center transition-transform hover:scale-[1.02] active:scale-95"

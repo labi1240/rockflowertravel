@@ -84,7 +84,7 @@ export default function ShuttleTracker() {
       activeService = 'Preparing for Daytime Circuit';
       status = 'resting';
       fromStation = 'Samson Mall'; toStation = 'Lake Louise Lakeshore';
-      segment = 'Layover / preparing bus at Samson Mall';
+      segment = 'Positioning for Daytime Circuit';
       etaMins = 420 - totalMinutes;
     } else if (totalMinutes >= 420 && totalMinutes < 1040) {
       const circuits = [
@@ -120,7 +120,7 @@ export default function ShuttleTracker() {
         status = 'resting';
         fromStation = 'Samson Mall'; toStation = 'Lake Louise Lakeshore';
         progressPercent = 100;
-        segment = 'Layover at Samson Mall';
+        segment = 'Positioning for next circuit';
         const curIndex = circuits.findIndex((c) => c.start === activeCirc.start);
         etaMins = curIndex < circuits.length - 1 ? circuits[curIndex + 1].start - totalMinutes : 1080 - totalMinutes;
       }

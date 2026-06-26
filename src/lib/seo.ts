@@ -143,6 +143,10 @@ const FAQ_ENTRIES: ReadonlyArray<{ q: string; a: string }> = [
     q: "Can I visit both lakes in a single trip?",
     a: "Yes. The Banff to Lake Louise + Moraine Lake fare ($89.99, plus the $5 Moraine Lake toll) is priced exactly for this — one ticket takes you to both shores in a single day.",
   },
+  {
+    q: "Where can I park my vehicle?",
+    a: "Please plan your parking before you travel — we are unable to provide or guarantee parking. Parks Canada does not permit customer parking at any Parks Canada parking lots, public parking areas, day-use areas, or trailheads at the Lake Louise Lakeshore or Moraine Lake. We recommend leaving your vehicle at your accommodation and reaching your pickup point by local public transit or taxi.",
+  },
 ];
 
 export const faqSchema = {

@@ -781,6 +781,20 @@ function TripSummary({
             </div>
           </div>
         </div>
+
+        {/* Parks Canada parking notice */}
+        <div className="flex items-start gap-3 rounded-2xl border-l-4 border-l-red-400 bg-red-50 p-4">
+          <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-red-100 text-red-700">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+          </span>
+          <p className="text-xs leading-relaxed text-mist-700">
+            <strong className="text-mist-900">Plan your parking before you travel — we can&apos;t
+            provide or guarantee parking.</strong> Parks Canada does not permit customer parking at
+            its lots, public parking areas, day-use areas, or trailheads at the Lake Louise Lakeshore
+            or Moraine Lake. We recommend leaving your vehicle at your accommodation and using local
+            transit or taxi to reach your pickup point.
+          </p>
+        </div>
       </div>
 
       <ul className="relative space-y-2.5 text-xs text-mist-700">

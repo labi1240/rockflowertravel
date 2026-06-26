@@ -133,6 +133,21 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
               <Row label="Seats">{booking.seats ?? 1}</Row>
             </Panel>
 
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-[var(--shadow-card)]">
+              <h2 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-700">
+                <span aria-hidden>⚠</span> Important — parking
+              </h2>
+              <p className="text-sm leading-relaxed text-mist-700">
+                Please plan your parking before you travel — we are unable to provide or guarantee
+                parking. Parks Canada does not permit customer parking at any Parks Canada parking
+                lots, public parking areas, day-use areas, or trailheads at the{' '}
+                <strong className="text-mist-900">Lake Louise Lakeshore</strong> or{' '}
+                <strong className="text-mist-900">Moraine Lake</strong>. We recommend leaving your
+                vehicle at your accommodation and reaching your pickup point by local public transit
+                or taxi.
+              </p>
+            </div>
+
             <Panel title="Contact">
               <Row label="Name">{fullName || '—'}</Row>
               <Row label="Email">{booking.guestEmail ?? '—'}</Row>

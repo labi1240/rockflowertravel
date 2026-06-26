@@ -35,7 +35,7 @@ const PLACEHOLDER_REVIEWS = [
   },
   {
     id: 'r2',
-    quote: 'Skipped the parking nightmare entirely. Samson Mall pickup is dead simple and the loop hit both lakes without any waiting around. Bundle pricing made it cheaper than driving.',
+    quote: 'Letting them handle the driving was a relief. Samson Mall pickup is dead simple and the loop hit both lakes without any waiting around. Bundle pricing made it cheaper than driving.',
     author: 'Daniel M.',
     location: 'Edmonton, AB',
     service: 'Daytime Circuit',

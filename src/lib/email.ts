@@ -105,6 +105,14 @@ export async function sendBookingConfirmation(b: ConfirmationData): Promise<void
           Arrive <strong style="color:#211b16;">10 minutes</strong> before departure and present this pass to the driver.
         </p>
 
+        <!-- Parks Canada parking notice -->
+        <div style="margin-top:16px;background:#fdf3f1;border:1px solid #f1c8c0;border-radius:12px;padding:14px 16px;">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:bold;letter-spacing:0.1em;color:#b3331c;text-transform:uppercase;">⚠ Important — Parking</p>
+          <p style="margin:0;font-size:12px;color:#6b5d50;line-height:1.5;">
+            Please plan your parking before you travel — we are unable to provide or guarantee parking. Parks Canada does <strong style="color:#211b16;">not</strong> permit customer parking at any Parks Canada parking lots, public parking areas, day-use areas, or trailheads at the <strong style="color:#211b16;">Lake Louise Lakeshore</strong> or <strong style="color:#211b16;">Moraine Lake</strong>. We recommend leaving your vehicle at your accommodation and reaching your pickup point by local public transit or taxi.
+          </p>
+        </div>
+
         <div style="text-align:center;margin-top:24px;">
           <a href="${url}" style="display:inline-block;background:#e8a13a;color:#0f2a20;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;font-size:14px;">Open Online Pass →</a>
         </div>

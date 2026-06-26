@@ -30,13 +30,13 @@ export async function seedLanding(payload: Payload) {
       seo: {
         metaTitle: 'Sunrise at Moraine Lake — Banff Shuttle Tour | RockFlower Travels',
         metaDescription:
-          'Catch first light over the Valley of the Ten Peaks. Premium 4:30 AM Sunrise Express from Banff direct to Moraine Lake — reserved seats, no parking stress, on-time guarantee.',
+          'Catch first light over the Valley of the Ten Peaks. Premium 4:30 AM Sunrise Express from Banff direct to Moraine Lake — reserved seats, no driving stress, on-time guarantee.',
       },
       hero: {
         badge: 'Premium service',
         headline: 'Sunrise at Moraine Lake',
         subheadline:
-          'Beat the crowds and the parking ban. Our premium 4:30 AM Sunrise Express runs Banff direct to Moraine Lake so you arrive for first light over the Ten Peaks.',
+          'Beat the crowds and the driving stress. Our premium 4:30 AM Sunrise Express runs Banff direct to Moraine Lake so you arrive for first light over the Ten Peaks.',
         ratingValue: 4.9,
         ratingCount: 1487,
         ratingSource: 'Google',
@@ -48,7 +48,7 @@ export async function seedLanding(payload: Payload) {
           items: [
             { text: 'Departs Banff at 4:30 AM — first light at Moraine Lake' },
             { text: 'Premium isolated service — runs apart from the standard loops' },
-            { text: 'Skip the Parks Canada vehicle ban and parking lottery' },
+            { text: 'Skip the Parks Canada vehicle ban and the driving stress' },
             { text: 'Local drivers handle the mountain roads while you relax' },
             { text: 'Reserved coach seating — your seat is guaranteed' },
             { text: 'Free changes up to 24 hours before departure' },
@@ -123,7 +123,7 @@ export async function seedLanding(payload: Payload) {
           items: [
             { question: 'Are prices one-way or round-trip?', answer: 'The Sunrise Express is sold per seat. Choose your trip above — one-way and round-trip options are priced separately and shown live before you pay.' },
             { question: 'Do I need a Parks Canada pass?', answer: 'Yes. A valid Parks Canada park pass is required to enter Banff National Park and is not included in the shuttle fare. Buy one in advance or at the park gates.' },
-            { question: 'Can I drive my personal vehicle to Moraine Lake?', answer: 'No. Personal vehicles are not permitted on Moraine Lake Road. A shuttle is the only way to reach the lake — which is exactly what we run.' },
+            { question: 'Can I drive my personal vehicle to Moraine Lake?', answer: 'No. Personal vehicles are not permitted on Moraine Lake Road, and client parking at public lands like Lake Louise Lakeshore is strictly prohibited. A shuttle is the reliable way to reach the lake.' },
             { question: 'What if I miss the bus?', answer: 'Shuttles depart strictly on time. If you miss your departure your ticket is void, though we will try to accommodate you on a later shuttle if space permits.' },
             { question: 'Can I change my reservation to another day?', answer: 'Yes — you can change your date or time up to 24 hours before departure, subject to availability.' },
           ],
