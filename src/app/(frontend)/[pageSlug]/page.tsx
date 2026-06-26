@@ -10,6 +10,7 @@ import HeroGallery from '@/components/landing/HeroGallery'
 import BookingCard from '@/components/landing/BookingCard'
 import StickyBookBar from '@/components/landing/StickyBookBar'
 import RelatedRoutes from '@/components/landing/RelatedRoutes'
+import ParkingNotice from '@/components/ParkingNotice'
 import { Stars } from '@/components/landing/icons'
 import { resolveMedia, type ResolvedImage } from '@/components/landing/media'
 import { getPayloadClient } from '@/lib/payload'
@@ -238,6 +239,7 @@ export default async function LandingPage({ params }: { params: Promise<{ pageSl
                   ))}
                 </ul>
               )}
+              <ParkingNotice className="mt-8" />
               {railBlocks.length > 0 && (
                 <div className="mt-12 space-y-12">
                   <BlockRenderer
